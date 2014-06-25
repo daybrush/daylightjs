@@ -138,6 +138,12 @@ daylight.extend(daylight, {
 //@{dimension/position.js}
 
 //@{insertion.js}
+
+//@{template/template.js}
+
+
+
+
 //@{extend.js}
 
 })(window);

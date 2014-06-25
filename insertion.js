@@ -53,5 +53,39 @@ daylight.extend(prototype, {
 			element.insertAdjacentHTML(position, html);
 		});
 		return this;
+	},
+	html: function(value) {
+		if(!(value === undefined)) {
+			this.each(function() {
+				this.innerHTML = value;
+			});
+		}
+		if(this.length === 0)
+			return "";
+
+		if(this.o[0] === undefined)
+			return;
+		return this.o[0].innerHTML;
+	},
+	text : function(value) {
+		if(!(value === undefined)) {
+			this.each(function() {
+				this.innerText = value;
+			});
+			return this;
+		}
+		if(this.o[0] === undefined)
+			return;
+		return this.o[0].innerText;
+	},
+	ohtml: function(value) {
+		if(!(value === undefined)) {
+			this.each(function() {
+				this.outerHTML = value;
+			});
+		}
+		if(this.o[0] === undefined)
+			return;
+		return this.o[0].outerHTML;
 	}
 });
