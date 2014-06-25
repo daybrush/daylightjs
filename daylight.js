@@ -109,6 +109,10 @@ daylight.extend(daylight, {
 	searchByName: this.name
 	
 });
+//define
+//@{define.js}
+
+
 //is함수
 //@{check.js}
 
