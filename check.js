@@ -1,4 +1,4 @@
-daylight.extend(daylight, {
+daylight.extend({
 	/**
 	* @method
 	* @name daylight.isElement

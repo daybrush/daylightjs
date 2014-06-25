@@ -1,11 +1,11 @@
 //define 관련 함수들 모음
-daylight.extend(daylight, {
+daylight.extend({
 	//해당 함수를 선언합니다.
 	define : function(object, name, func) {
 		var type = typeof object;
 		if(type === "object" && object.__proto__)
 			object.__proto__[name] = func;
-		else if(daylight.index(["function", "object"], type) != -1 && object.prototype)
+		else if(["function", "object"].indexOf(type) != -1 && object.prototype)
 			object.prototype[name] = func;
 		else if(type === "object")
 			object[name] = func;
@@ -48,7 +48,7 @@ daylight.extend(daylight, {
 	}
 	//전역변수를 만듭니다.
 	,defineGlobal: function(name, o) {
-		var typeName = this.type(name);
+		var typeName = _checkType(name);
 		if(typeName === "string")
 			window[name] = o;
 	},
@@ -58,7 +58,7 @@ daylight.extend(daylight, {
 		var methods = {};
 		for(var i = 0; i < args.length; ++i) {
 			var obj = args[i];
-			var type = this.type(obj);
+			var type = _checkType(obj);
 			if(type === "function") {//function일 때 인자의 갯수로 구분.
 				methods[obj.length] = obj;	
 			} else if(type === "object") {//오브젝트 이면 인자의 타입으로 구분
@@ -73,7 +73,7 @@ daylight.extend(daylight, {
 				return methods[args2.length].apply(this, args2);
 				
 				
-			var arr = daylight.map(args2, function(value) {var type = daylight.type(value);
+			var arr = daylight.map(args2, function(value) {var type = _checkType(value);
 						return type === "object" && value.constructor.name.toLowerCase() || type;
 					});//인자의 타입을 가져옴
 			var param = arr.join(",");

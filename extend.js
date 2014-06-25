@@ -1,2 +1,2 @@
-daylight.extend(NodeListPrototype, prototype);
-daylight.extend(ElementListPrototype, prototype);
+daylight.extend(true, NodeListPrototype, prototype);
+daylight.extend(true, ElementListPrototype, prototype);

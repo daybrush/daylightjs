@@ -1,6 +1,6 @@
 
 var window = window.window;
-daylight.extend(prototype, {
+daylight.extend(true, prototype, {
 	visible: function(obj) {
 		var obj = obj || {top:"0%", left:"0%", width:"100%", height: "100%"};
 		var top = obj.top || "0%";

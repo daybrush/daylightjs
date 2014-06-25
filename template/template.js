@@ -4,11 +4,11 @@
 * @return : html(String)
 */
 daylight.template = function(obj, template) {
-	var type = this.type(obj);
-	var templateType = this.type(template);
+	var type = _checkType(obj);
+	var templateType = _checkType(template);
 	
-	if(templateType === sDaylight)
-		template = template.ohtml();//html 형태로 변환
+	if(templateType === sDaylight ||templateType === sNodeList)
+		template = template.ohtml() || "";//html 형태로 변환
 		
 	if(type === sArray) {//배열이면 리스트 형태로 만든다.
 		var contents = [];
@@ -36,16 +36,17 @@ daylight.template = function(obj, template) {
 				}
 				
 			} else {
-				if(value === undefined)
+				if(typeof value === "undefined")
 					value = "";
-				template = daylight.replace("{" + k + "}", value, template);//{key} => value
+				template = template.replaceAll("{" + k + "}", value);//{key} => value
 			}
 		}
 		//console.log(template);
 		return template;
 	} else {
 		//배열이나 Dictionary 형태가 아닌 다른 것들은 키를 1로 하고 value로 바꿔준다.
-		return daylight.replace("{1}", obj, template);//{1} => value
+		console.log(template);
+		return template.replaceAll("{1}", obj);//{1} => value
 	}
 	return "";
 }

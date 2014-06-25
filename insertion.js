@@ -1,7 +1,7 @@
-daylight.extend(prototype, {
+daylight.extend(true, prototype, {
 	before : function(e) {
 		var is_element = daylight.isElement(e);//type 검사
-		if(!is_element && _type(e) != sDaylight) {
+		if(!is_element && _checkType(e) != sDaylight) {
 			this.insertHTML("beforebegin", e); 
 			return this;
 		}
@@ -13,7 +13,7 @@ daylight.extend(prototype, {
 	},
 	prepend : function(e) {
 		var is_element = daylight.isElement(e);//type 검사
-		if(!is_element && _type(e) != sDaylight) {
+		if(!is_element && _checkType(e) != sDaylight) {
 			this.insertHTML("afterbegin", e);
 			return this;
 		}
@@ -25,7 +25,7 @@ daylight.extend(prototype, {
 	},
 	append : function(obj) {
 		var is_element = daylight.isElement(obj);//type 검사
-		if(!is_element && _type(obj) != sDaylight) {
+		if(!is_element && _checkType(obj) != sDaylight) {
 			this.insertHTML("beforeend", obj);
 			return this;
 		}
@@ -38,7 +38,7 @@ daylight.extend(prototype, {
 	},
 	after : function(e) {
 		var is_element = daylight.isElement(e);//type 검사
-		if(!is_element && _type(e) != sDaylight) {
+		if(!is_element && _checkType(e) != sDaylight) {
 			this.insertHTML("afterend", e);
 			return this;
 		}
@@ -63,9 +63,9 @@ daylight.extend(prototype, {
 		if(this.length === 0)
 			return "";
 
-		if(this.o[0] === undefined)
+		if(this[0] === undefined)
 			return;
-		return this.o[0].innerHTML;
+		return this[0].innerHTML;
 	},
 	text : function(value) {
 		if(!(value === undefined)) {
@@ -74,18 +74,18 @@ daylight.extend(prototype, {
 			});
 			return this;
 		}
-		if(this.o[0] === undefined)
+		if(this[0] === undefined)
 			return;
-		return this.o[0].innerText;
+		return this[0].innerText;
 	},
 	ohtml: function(value) {
 		if(!(value === undefined)) {
 			this.each(function() {
-				this.outerHTML = value;
+				thisuterHTML = value;
 			});
 		}
-		if(this.o[0] === undefined)
+		if(this[0] === undefined)
 			return;
-		return this.o[0].outerHTML;
+		return this[0].outerHTML;
 	}
 });

@@ -1,4 +1,4 @@
-daylight.extend(daylight, {
+daylight.extend({
 	/**
 	* @func : daylight.removeClass(Element, className)
 	* @description : 클래스를 삭제를 합니다.

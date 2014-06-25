@@ -42,6 +42,7 @@ var ElementList = function ElementList(arr) {
 	}
 	this.length = length;
 };
+
 var ElementListPrototype = ElementList.prototype = [];
 ElementListPrototype.push = ElementListPrototype.add = function(e) {
 	var length = this.length;
@@ -49,7 +50,7 @@ ElementListPrototype.push = ElementListPrototype.add = function(e) {
 	this.length = length;
 }
 
-var daylight = window.$o = function(obj, element) {
+var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 	var type = _checkType(obj);
 	switch(type) {
 	case "string":
@@ -58,9 +59,10 @@ var daylight = window.$o = function(obj, element) {
 		return obj;
 	case "element":
 	case "htmlcollection":
-		return new ElementList(obj);
+		
 	default:
-		throw new Error("Not Available : " + type);
+		return new ElementList(obj);
+		//throw new Error("Not Available : " + type);
 	}	
 
 };
@@ -77,15 +79,26 @@ prototype.find = function(query) {
 	});
 	return list;
 }
-daylight.extend = function(target, object) {
-	for(var key in object) {
-		if(target.hasOwnProperty(key))
-			continue;
+daylight.extend = function() {
+	var length = arguments.length;
+	var i = 0;
+	var target = this;
+	var type = _checkType(arguments[0]);
+	if(type === "boolean") {
+		target = arguments[1];
+		i = 2;
+	}
+	for(; i < length; ++i) {
+		object = arguments[i];
+		for(var key in object) {
+			if(target.hasOwnProperty(key))
+				continue;
 			
-		target[key] = object[key];
+			target[key] = object[key];
+		}
 	}
 }
-daylight.extend(daylight, {
+daylight.extend({
 	query: function(query, element) {
 		element = element || document;
 		return element.querySelectorAll(query);
@@ -102,11 +115,12 @@ daylight.extend(daylight, {
 		return element.getElementsByTagName(name);
 	}
 });
-daylight.extend(daylight, {
+daylight.extend({
 	searchByQuery: this.query,
 	searchByClass: this.class,
 	searchById: this.id,
-	searchByName: this.name
+	searchByName: this.name,
+	type: _checkType
 	
 });
 //define
