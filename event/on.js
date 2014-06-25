@@ -1,6 +1,6 @@
 prototype.on = function(key, func, type) {
 	if(func) {
-		this.forEach(function(ele) {
+		this.each(function(ele) {
 			if(ele.addEventListener){
 				ele.addEventListener(key, func);    
 			} else if(ele.attachEvent){ // IE < 9 :(

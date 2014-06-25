@@ -12,7 +12,7 @@ var userAgent = navigator.userAgent;
 
 var _Element = window.HTMLElement || window.Element;
 
-var sObject = "object", sDaylight = "daylight", sString = "string", sArray = "array", sNodeList = "nodelist";
+var sObject = "object", sDaylight = "daylight", sString = "string", sArray = "array", sNodeList = "nodelist", sElementList = "elementlist";
 
 "Boolean Number String Text Function Array Date RegExp Object Error Window NodeList HTMLCollection".split(" ").forEach(function(name, index, arr) {
 	class2type[ "[object " + name + "]" ] = name.toLowerCase();
@@ -21,7 +21,29 @@ var sObject = "object", sDaylight = "daylight", sString = "string", sArray = "ar
 //reference to jQuery type
 var _checkType = function(obj) {
 	var type = typeof obj;
-	return obj==null ? obj+"" : type === "object" ? obj instanceof _Element ? "element" : obj.daylight || class2type[toString.call(obj)] || "object" : type;	
+	return obj==null ? obj+"" : type === "object" ? obj instanceof _Element ? "element" : obj.elementlist || class2type[toString.call(obj)] || "object" : type;	
+}
+
+var _concat = function(arr) {
+	var a = [];
+	var l = arr.length;
+	var t = daylight.type(arr);
+	if(t === "nodelist") {
+		a =  Array.prototype.slice.call(arr);
+		return a;
+	}
+	
+	var type, i;
+	for(i = 0; i < l; ++i) {
+		type = _checkType(arr[i]);
+		if(type === "array")
+			a = a.concat(arr[i]);
+		else if(type === "nodelist")
+			a = a.concat(Array.prototype.slice.call(arr[i]));
+		else
+			a.push(arr[i]);
+	}
+	return a;
 }
 
 var ElementList = function ElementList(arr) {
@@ -42,14 +64,13 @@ var ElementList = function ElementList(arr) {
 	}
 	this.length = length;
 };
-
 var ElementListPrototype = ElementList.prototype = [];
 ElementListPrototype.push = ElementListPrototype.add = function(e) {
 	var length = this.length;
 	this[length++] = e;
 	this.length = length;
 }
-
+ElementListPrototype.elementlist = sElementList;
 var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 	var type = _checkType(obj);
 	switch(type) {
@@ -69,17 +90,7 @@ var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 prototype.size = function() {
 	return this.length;
 }
-prototype.find = function(query) {
-	var list = new ElementList();
-	return this.each(function(element, index) {
-		var elements = element.querySelectorAll(query);
-		elements.each(function(element, index) {
-			list.add(element);				
-		});
-	});
-	return list;
-}
-daylight.extend = function() {
+prototype.extend = daylight.extend = function() {
 	var length = arguments.length;
 	var i = 0;
 	var target = this;
@@ -115,14 +126,20 @@ daylight.extend({
 		return element.getElementsByTagName(name);
 	}
 });
-daylight.extend({
-	searchByQuery: this.query,
-	searchByClass: this.class,
-	searchById: this.id,
-	searchByName: this.name,
-	type: _checkType
-	
-});
+//string
+//@{string/camelCase.js}
+
+//tree
+//@{tree/parent.js}
+//@{tree/child.js}
+
+//get
+//@{get.js}
+
+//element
+//@{element/element.js}
+//@{element/parse.js}
+
 //define
 //@{define.js}
 
@@ -151,7 +168,10 @@ daylight.extend({
 //@{dimension/dimension.js}
 //@{dimension/position.js}
 
+
+//html, value, text, insertion
 //@{insertion.js}
+//@{val.js}
 
 //@{template/template.js}
 

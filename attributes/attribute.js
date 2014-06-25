@@ -6,20 +6,17 @@ prototype.setAttribute = function(name, value) {
 	return this;
 }
 prototype.getAttribute = function(name) {
-	var o = this[0];
-	if(typeof o !== "object")	
-		return;
-		
+	var o = this.get(0) || "";
 	return  o.getAttribute ? o.getAttribute(name) : o[name];
 }
 
 prototype.attr = function(name, value) {
 	var length = arguments.length;
 	if(length >= 2)
-		return prototype.setAttribute(name, value);
+		return this.setAttribute(name, value);
 	
 	if(length !== 1)
 		return;
 
-	return prototype.getAttribute(name);
+	return this.getAttribute(name);
 }

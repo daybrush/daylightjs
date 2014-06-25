@@ -83,15 +83,55 @@ daylight.extend({
 		return true;
 	}
 });
-prototype.addClass = function() {
-	
-}
-prototype.removeClass = function() {
-	
-}
-prototype.toggleClass = function() {
-	
-}
-prototype.getClass = function() {
-	
-}
+daylight.extend(true, prototype, {
+	getClass : function() {
+		var obj = this.get(0);
+		//var type = daylight.type(obj);
+		if(obj instanceof _Element) {
+			return obj.className.split(" ");
+		}
+		return [];
+	},
+	addClass : function(className) {
+		this.each(function(e, index) {
+			daylight.addClass(e, className);
+		});
+		return this;
+	},
+	hasClass : function(className, index) {
+		if(!index)
+			index = 0;
+		if(!this.length)
+			return false;
+		
+		return daylight.hasClass(this.get(index), className);
+	},
+	/*
+		클래스가 있으면 제거 없으면 추가한다.
+		
+		className이 있으면 className 제거 , className2 추가
+		className2가 있으면 className2제거, className 추가
+		
+	*/
+	toggleClass : function(className, className2) {
+		//var obj = this;
+		if(this.length === 0)
+			return;
+		
+		//if(this.size === 1)
+		//	return daylight.toggleClass(this.o[0], className, className2);
+			
+		this.each(function(e, index) {
+			daylight.toggleClass(e, className, className2);
+		});
+		return this;
+	},
+	removeClass : function(className) {
+		//var reg = new RegExp('(\\s|^)'+className+'(\\s|$)');
+		this.each(function(element) {
+			daylight.removeClass(element, className);
+		});
+		
+		return this;
+	}
+});
