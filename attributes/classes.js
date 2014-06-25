@@ -83,3 +83,15 @@ daylight.extend(daylight, {
 		return true;
 	}
 });
+prototype.addClass = function() {
+	
+}
+prototype.removeClass = function() {
+	
+}
+prototype.toggleClass = function() {
+	
+}
+prototype.getClass = function() {
+	
+}
