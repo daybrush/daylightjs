@@ -131,7 +131,7 @@ prototype.extend({
 			var arr, length;
 			if(type === sDaylight)
 				arr = object.o;
-			else if(type === sArray || type === sNodeList)
+			else if(type === sArray || type === sNodeList || type === sElementList)
 				arr = object;
 			else
 				arr = object;
