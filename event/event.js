@@ -123,6 +123,11 @@ daylight.$E = {
 		return this;
 	}
 });
+	
+//@{event/trigger.js}
+//@{event/on.js}
+//@{event/drag.js}
+//@{event/visible.js}
 
 prototype.extend({
 	wheel: function(func) {

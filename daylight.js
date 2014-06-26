@@ -174,11 +174,7 @@ daylight.extend({
 
 
 //event
-//@{event/trigger.js}
-//@{event/on.js}
 //@{event/event.js}
-//@{event/drag.js}
-//@{event/visible.js}
 
 //dimension
 //@{dimension/dimension.js}

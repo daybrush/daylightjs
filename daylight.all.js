@@ -1229,97 +1229,6 @@ prototype.css = function(name, value, isNoObject) {
 
 
 //event
-var _isIeCustomEvent = !document.createEvent && !!document.createEventObject;
-var _customEvents = {};
-
-
-
-daylight.initEvent = function(name, extra) {
-	var e;
-	if(_isIeCustomEvent) {
-		e = document.createEventObject();
-		e.type = name;
-		e.eventType = name;
-	} else {
-		e = document.createEvent("Event");
-		e.initEvent(name, true, true);
-	}
-	for(var key in extra)
-		e[key] = extra[key];
-	
-	return e;
-}
-daylight.triggerCustomEvent = function(element, name, extra) {
-	//중복 제거하기 test
-	var e = daylight.initEvent(name);
-
-	if(!_customEvents.hasOwnProperty(name))
-		return;
-		
-	var event_trigger_info = _customEvents[name];
-	for(var i =0, length = event_trigger_info.length; i < length; ++i) {
-		var event_info = event_trigger_info[i];
-		var has = daylight.has(event_info.element, element, true);
-		if(has) {
-			//함수로 빼기. test
-			e.srcElement = e.target = element;
-			e.currentTarget = event_info.element;
-			
-			event_info.handler.call(event_info.element, e);
-		}
-	}
-	return;
-}
-daylight.trigger = function(element, key, extra) {
-	var returnValue = false;
-	var e = daylight.initEvent(key, extra);
-
-	if(element.dispatchEvent) {
-		returnValue = element.dispatchEvent(e);
-		//console.log(returnValue);
-	} else if(element.fireEvent) {
-		if(_isIeCustomEvent) {
-			//mouseEvent의 버블링 해야겠다 ㅠㅠ
-			returnValue = daylight.triggerCustomEvent(element, key, extra);
-		}else {
-			returnValue = element.fireEvent("on" + key, e);
-		}
-	} else if(element[key]) {
-		returnValue = element[key](e);
-	} else if(element["on" +key]) {
-		returnValue = element["on" +key](e);
-	}
-	
-	return returnValue;
-}
-
-prototype.trigger = function(key, extra) {
-	this.each(function(element) {
-		daylight.trigger(element, key, extra);
-	});
-	return this;	
-};
-prototype.on = function(key, func, type) {
-	if(func) {
-		this.each(function(ele) {
-			if(ele.addEventListener){
-				ele.addEventListener(key, func);    
-			} else if(ele.attachEvent){ // IE < 9 :(
-			    ele.attachEvent("on" + key, function(e){ func.call(ele, e )});
-				if(_isIeCustomEvent) {
-					if(!_customEvents[key])
-						_customEvents[key] = [];
-					_customEvents[key].push({element: ele, handler: func, bubble: type=== undefined? true : !type, capture: !!type});
-				}
-			} else{
-				ele["on" + key] = handler;
-			}
-		});
-	} else {
-		this.trigger(key);
-	}
-	return this;
-};
 
 var _touch = function(e) {
 	var te = {};
@@ -1445,27 +1354,98 @@ daylight.$E = {
 		return this;
 	}
 });
+	
+var _isIeCustomEvent = !document.createEvent && !!document.createEventObject;
+var _customEvents = {};
 
-prototype.extend({
-	wheel: function(func) {
-		this.on("DOMMouseScroll", func);
-		this.on("mousewheel", func);
-	},
-	ready: function(func) {
-		function listener(e) {
-			if (e && e.readyState  || this.readyState === "interactive") {
-				func.call(this, e);
-			}
-		};
-		this.each(function() {
-			if(this.readyState === "interactive" || this.readyState === "complete")
-				listener({readyState : "interactive"});
-		});
-		
-		this.on("readystatechange", listener);
 
+
+daylight.initEvent = function(name, extra) {
+	var e;
+	if(_isIeCustomEvent) {
+		e = document.createEventObject();
+		e.type = name;
+		e.eventType = name;
+	} else {
+		e = document.createEvent("Event");
+		e.initEvent(name, true, true);
 	}
-});
+	for(var key in extra)
+		e[key] = extra[key];
+	
+	return e;
+}
+daylight.triggerCustomEvent = function(element, name, extra) {
+	//중복 제거하기 test
+	var e = daylight.initEvent(name);
+
+	if(!_customEvents.hasOwnProperty(name))
+		return;
+		
+	var event_trigger_info = _customEvents[name];
+	for(var i =0, length = event_trigger_info.length; i < length; ++i) {
+		var event_info = event_trigger_info[i];
+		var has = daylight.has(event_info.element, element, true);
+		if(has) {
+			//함수로 빼기. test
+			e.srcElement = e.target = element;
+			e.currentTarget = event_info.element;
+			
+			event_info.handler.call(event_info.element, e);
+		}
+	}
+	return;
+}
+daylight.trigger = function(element, key, extra) {
+	var returnValue = false;
+	var e = daylight.initEvent(key, extra);
+
+	if(element.dispatchEvent) {
+		returnValue = element.dispatchEvent(e);
+		//console.log(returnValue);
+	} else if(element.fireEvent) {
+		if(_isIeCustomEvent) {
+			//mouseEvent의 버블링 해야겠다 ㅠㅠ
+			returnValue = daylight.triggerCustomEvent(element, key, extra);
+		}else {
+			returnValue = element.fireEvent("on" + key, e);
+		}
+	} else if(element[key]) {
+		returnValue = element[key](e);
+	} else if(element["on" +key]) {
+		returnValue = element["on" +key](e);
+	}
+	
+	return returnValue;
+}
+
+prototype.trigger = function(key, extra) {
+	this.each(function(element) {
+		daylight.trigger(element, key, extra);
+	});
+	return this;	
+};
+prototype.on = function(key, func, type) {
+	if(func) {
+		this.each(function(ele) {
+			if(ele.addEventListener){
+				ele.addEventListener(key, func);    
+			} else if(ele.attachEvent){ // IE < 9 :(
+			    ele.attachEvent("on" + key, function(e){ func.call(ele, e )});
+				if(_isIeCustomEvent) {
+					if(!_customEvents[key])
+						_customEvents[key] = [];
+					_customEvents[key].push({element: ele, handler: func, bubble: type=== undefined? true : !type, capture: !!type});
+				}
+			} else{
+				ele["on" + key] = handler;
+			}
+		});
+	} else {
+		this.trigger(key);
+	}
+	return this;
+};
 daylight.extend(true, prototype, {
 	dragEvent: function(e, dragDistance, dragObject) {
 		//console.log(e.constructor);
@@ -1641,6 +1621,27 @@ daylight.extend(true, prototype, {
 		});
 	}	
 })
+
+prototype.extend({
+	wheel: function(func) {
+		this.on("DOMMouseScroll", func);
+		this.on("mousewheel", func);
+	},
+	ready: function(func) {
+		function listener(e) {
+			if (e && e.readyState  || this.readyState === "interactive") {
+				func.call(this, e);
+			}
+		};
+		this.each(function() {
+			if(this.readyState === "interactive" || this.readyState === "complete")
+				listener({readyState : "interactive"});
+		});
+		
+		this.on("readystatechange", listener);
+
+	}
+});
 
 //dimension
 prototype.extend({
