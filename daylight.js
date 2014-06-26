@@ -142,6 +142,11 @@ daylight.extend({
 //@{array.js}
 
 
+//agent
+//@{agent/agent.js}
+//@{agent/browser.js}
+
+
 //string
 //@{string/camelCase.js}
 
