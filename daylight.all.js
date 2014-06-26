@@ -290,6 +290,9 @@ daylight._AGENT_IS_CH = daylight._userAgent.indexOf("Chrome") > -1;
 daylight._AGENT_IS_WK = daylight._userAgent.indexOf("WebKit") > -1;
 daylight._AGENT_IS_MO = /(iPad|Mobile|Android|Nokia|webOS|BlackBerry|Opera Mini)/.test(daylight._userAgent);
 
+daylight.agent = {};
+daylight.agent.isMobile = daylight._AGENT_IS_MO;
+
 
 /**
 
