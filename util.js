@@ -101,11 +101,11 @@ prototype.extend({
 	map: function(func) {	
 		var objects = this;
 		var length = this.length;
-		var arr = [];
+		var arr = new ElementList();
 		for(var i = 0; i < length; ++i)
-			arr[i] = func.call(objects[i], objects[i], i, objects);
+			arr.add(func.call(objects[i], objects[i], i, objects));
 		
-		return daylight(arr);
+		return arr;
 	},
 	/*
 		각각의 element에 대해 일을 수행한다.

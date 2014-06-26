@@ -9,8 +9,9 @@ var toString = class2type.toString;
 var hasOwn = class2type.hasOwnProperty;
 var navigator = window.navigator || navigator;
 var userAgent = navigator.userAgent;
-
 var _Element = window.HTMLElement || window.Element;
+
+
 
 var sObject = "object", sDaylight = "daylight", sString = "string", sArray = "array", sNodeList = "nodelist", sElementList = "elementlist";
 
@@ -69,8 +70,16 @@ ElementListPrototype.push = ElementListPrototype.add = function(e) {
 	var length = this.length;
 	this[length++] = e;
 	this.length = length;
+
+	return this;
 }
 ElementListPrototype.elementlist = sElementList;
+
+NodeListPrototype.push = NodeListPrototype.add = function(e) {
+	var a = new ElementList(this);
+	a.add(e);
+	return a;
+}
 var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 	var type = _checkType(obj);
 	switch(type) {
@@ -108,6 +117,8 @@ prototype.extend = daylight.extend = function() {
 			target[key] = object[key];
 		}
 	}
+	
+	return target;
 }
 daylight.extend({
 	query: function(query, element) {
@@ -126,6 +137,11 @@ daylight.extend({
 		return element.getElementsByTagName(name);
 	}
 });
+
+//array
+//@{array.js}
+
+
 //string
 //@{string/camelCase.js}
 
@@ -175,7 +191,7 @@ daylight.extend({
 
 //@{template/template.js}
 
-
+//@{ajax/ajax.js}
 
 
 //@{extend.js}

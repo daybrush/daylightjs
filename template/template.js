@@ -45,7 +45,6 @@ daylight.template = function(obj, template) {
 		return template;
 	} else {
 		//배열이나 Dictionary 형태가 아닌 다른 것들은 키를 1로 하고 value로 바꿔준다.
-		console.log(template);
 		return template.replaceAll("{1}", obj);//{1} => value
 	}
 	return "";

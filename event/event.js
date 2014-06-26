@@ -124,7 +124,7 @@ daylight.$E = {
 	}
 });
 
-daylight.extend({
+prototype.extend({
 	wheel: function(func) {
 		this.on("DOMMouseScroll", func);
 		this.on("mousewheel", func);

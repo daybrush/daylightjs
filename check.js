@@ -10,7 +10,7 @@ daylight.extend({
 */
 	nodeName : function(element, compare) {
 		var nodeName = element.nodeName;
-		var type = daylight.type(compare);
+		var type = typeof element;
 		if(compare !== undefined) {
 			if(type === "object")//비교 대상이 있으면 비교값을 리턴 true, false;
 				return nodeName === compare.nodeName;
@@ -99,3 +99,11 @@ daylight.extend({
 		return false;
 	}
 });
+prototype.extend({
+	nodeName: function() {
+		return daylight.nodeName(this.get(0));
+	},
+	empty: function() {
+		return (this.length === 0);
+	}
+})

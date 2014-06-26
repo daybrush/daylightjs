@@ -30,13 +30,19 @@
 		}		
 		return -1;
 	}
-	
 	ArrayPrototype.forEach = ArrayPrototype.forEach || function (func) {
 		var length = this.length;
 		
 		for(var i = 0; i < length; ++i) {
 			func.call(this[i], this[i], i, this);
 		}		
+		return this;
+	}
+	ArrayPrototype.remove = ArrayPrototype.remove || function(member) {
+		var index = this.indexOf(member);
+		if (index > -1) {
+			this.splice(index, 1);
+		}
 		return this;
 	}
 	Object.keys = Object.keys || (function () {

@@ -16,7 +16,7 @@ prototype.extend({
 	},
 	get: function(index) {
 		if(index === undefined)
-			return this;
+			return this.getOriginal();
 			
 		var length = this.length;	
 		if(length === 0)
@@ -26,6 +26,13 @@ prototype.extend({
 		while(index >= this.length) {index = index - length;}
 		
 		return this[index];
+	},
+	getOriginal: function() {
+		var type = daylight.type(this);
+		if(type === "nodelist")
+			return this;
+			
+		return this.toArray();
 	},
 	first : function() {
 		if(this.length === 0)
@@ -38,8 +45,5 @@ prototype.extend({
 			return;
 			
 		return daylight(this.get(-1));
-	},
-	empty: function() {
-		return (this.length === 0);
 	}
 });

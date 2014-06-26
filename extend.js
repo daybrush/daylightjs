@@ -1,14 +1,15 @@
 daylight.extend({
-	searchByQuery: this.query,
-	searchByClass: this.class,
-	searchById: this.id,
-	searchByName: this.name,
+	searchByQuery: daylight.query,
+	searchByClass: daylight.class,
+	searchById: daylight.id,
+	searchByName: daylight.name,
 	type: _checkType,
 	checkType: _checkType
 });
 
 prototype.extend({
-	isEmpty: this.empty
+	isEmpty: prototype.empty,
+	forEach: prototype.each
 });
 daylight.extend(true, NodeListPrototype, prototype);
 daylight.extend(true, ElementListPrototype, prototype);
