@@ -21,7 +21,7 @@ def analyze(file):
 		subfile = subfile.replace("}", "")
 		subcontents = analyze(subfile);
 		contents = contents.replace("//@{" + subfile + "}", subcontents);
-
+		
 	return contents
 
 contents = analyze("daylight.js")

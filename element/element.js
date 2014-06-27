@@ -12,5 +12,11 @@ daylight.extend({
 	},
 	jsonToElement: function(json) {
 		
+	},
+	//내용을 복사합니다.
+	clone: function(node, dataAndEvent, deepDataAndEvent) {
+		var n = node.cloneNode();
+		n.innerHTML = node.innerHTML;
+		return n;
 	}
 });

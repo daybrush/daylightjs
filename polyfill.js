@@ -38,6 +38,7 @@
 		}		
 		return this;
 	}
+/*
 	ArrayPrototype.remove = ArrayPrototype.remove || function(member) {
 		var index = this.indexOf(member);
 		if (index > -1) {
@@ -45,6 +46,7 @@
 		}
 		return this;
 	}
+*/
 	Object.keys = Object.keys || (function () {
 		'use strict';
 		var hasOwnProperty = Object.prototype.hasOwnProperty,

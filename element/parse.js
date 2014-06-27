@@ -31,8 +31,8 @@ daylight.extend({
 	parseHTML: function(text) {
 		var p = document.createElement("p");
 		p.innerHTML = text;
-		var arr = _concat(p.childNodes);
-		return arr;
+		//var arr = _concat(p.childNodes);
+		return p.childNodes;
 	}
 
 });

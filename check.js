@@ -83,6 +83,18 @@ daylight.extend({
 		if(n.constructor === Object)
 			return true;
 	},
+	/**
+	* @method
+	* @name daylight.isList
+	*
+	* @param {*} obj
+	* @retruns {Boolean} if obj is List, True 
+	* @desc List인지 검사한다.
+	*/
+	isList: function(obj) {
+		var type = daylight.type(obj);
+		return type === "array" || type === "nodelist" || type === "elementlist" || type === "htmlcollection";
+	},
 	isDaylight: function(obj) {
 		var type = _checkType(obj);
 		return this.isDaylightType(type);

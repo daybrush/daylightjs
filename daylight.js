@@ -96,6 +96,8 @@ var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 	}	
 
 };
+
+daylight.type = _checkType;
 prototype.size = function() {
 	return this.length;
 }
@@ -137,6 +139,8 @@ daylight.extend({
 		return element.getElementsByTagName(name);
 	}
 });
+
+
 
 //array
 //@{array.js}
@@ -190,7 +194,11 @@ daylight.extend({
 //@{insertion.js}
 //@{val.js}
 
+
+//template
 //@{template/template.js}
+//@{template/template2.js}
+
 
 //@{ajax/ajax.js}
 
