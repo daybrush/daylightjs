@@ -1,7 +1,7 @@
 <html>
 <script src="./daylight.all.js"></script>
 <body>
-	<div class="hi">
+	<div class="hi" sba>
 		<set name="v1" value="v3"></set> 
 		<foreach var="hi" items="@items">
 			<block cond="@key!=1">
@@ -21,7 +21,6 @@
 <script>
 	daylight.templateEngine({items:[1,2,3,4]}, $("body")[0]);
 	daylight.template.loadURL("../animation/tools/template/property.xml", function(template) {
-		template.compile({title:"sads1"});
-		console.log(template.html);
+		//template.compile({title:"sads1"});
 	});
 </script>

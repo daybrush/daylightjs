@@ -11,6 +11,10 @@ def writeFile(name, contents):
 	f = open(name , 'w')
 	f.write(contents)
 	f.close()
+def minify(name, contents):
+	f = open(name , 'w')
+	f.write(contents)
+	f.close()
 
 def analyze(file):
 	contents = readFile(file);
@@ -26,3 +30,5 @@ def analyze(file):
 
 contents = analyze("daylight.js")
 writeFile("daylight.all.js", contents)
+writeFile("daylight.all.min.js", contents)
+#minify("daylight.all.min.js", contents)

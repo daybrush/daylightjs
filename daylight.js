@@ -152,6 +152,7 @@ daylight.extend({
 
 
 //string
+//@{string/string.js}
 //@{string/camelCase.js}
 
 //tree

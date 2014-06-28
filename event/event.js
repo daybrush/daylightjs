@@ -114,7 +114,7 @@ daylight.$E = {
 
 
 
-"scroll load dblclick click mousedown mousemove mouseup mouseleave focus keydown keypress keyup select selectstart resize".split(" ").forEach(function(name, index, arr) {
+"scroll load dblclick click mousedown mouseover mousemove mouseup mouseleave focus keydown keypress keyup select selectstart resize".split(" ").forEach(function(name, index, arr) {
 	if(typeof name !== "string")
 		return;
 		

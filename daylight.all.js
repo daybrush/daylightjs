@@ -397,6 +397,42 @@ daylight.browser = function() {
 
 
 //string
+/*String 관련 함수*/
+daylight.extend({
+/**
+* @method
+* @name daylight.isPlainObject
+*
+* @param {String} from 바뀔문자
+* @param {String} to 바꿀문자
+* @param {String} target 문자열
+*
+* @retruns {String} 바뀐 문자를 리턴
+* @desc from이 들어간 문자를 to로 전부 바꿔준다.
+*/	
+replace: function(from, to, str) {
+	if(!str)
+		return "";
+	return str.split(from).join(to);
+},
+/**
+* @method
+* @name daylight.repeat
+*
+* @param {String} 반복할 문자
+* @param {Number} 반복 횟수
+*
+* @retruns {String} 반복한 문자
+* @desc 반복 횟수만큼 문자를 반복한다.
+*/	
+repeat: function(str, num) {
+	var sWord = "";
+	for(var i = 0; i < num; ++i) {
+		sWord += daylight.replace("{count}", i + 1, str);
+	}
+	return sWord;
+}
+});
 daylight.camelCase = function(str) {
 	return str.replace(/-+(.)?/g, 
 		function(a,b){
@@ -1484,7 +1520,7 @@ daylight.$E = {
 
 
 
-"scroll load dblclick click mousedown mousemove mouseup mouseleave focus keydown keypress keyup select selectstart resize".split(" ").forEach(function(name, index, arr) {
+"scroll load dblclick click mousedown mouseover mousemove mouseup mouseleave focus keydown keypress keyup select selectstart resize".split(" ").forEach(function(name, index, arr) {
 	if(typeof name !== "string")
 		return;
 		
@@ -2396,6 +2432,9 @@ txt+="</foreach>";
 txt+="<body>Don't forget me this weekend!</body>";
 txt+="</note>";
 var template = daylight.template;
+var _tab = function(grade) {
+	return daylight.repeat("   ", grade);
+}
 template._outerHTML = function(xml) {
 	return daylight.parseXMLtoHTML(xml.cloneNode(true)).outerHTML;
 }
@@ -2532,7 +2571,7 @@ template.condition = function(grade, variable, cond) {
 			var v = !!eval(cond);
 		//console.debug("condition", cond, v);
 	}catch(e) {
-		console.error("error :", cond)
+		console.error("Parsing error condition :", cond)
 	}
 	return v;
 }
@@ -2550,13 +2589,13 @@ template.loop = function(grade, variable, xml, from, to, addition) {
 		from = this.replaceVariableName(grade, variable, from);
 		from = eval(from);
 	} catch(e) {
-		throw new Error("Parsing Error: " + from);
+		throw new Error("Parsing Error in loop from : " + from );
 	}
 	try {
 		to = this.replaceVariableName(grade, variable, to);
 		to = eval(to);
 	} catch(e) {
-		throw new Error("Parsing Error: " + to);
+		throw new Error("Parsing Error in loop to : " + to);
 	}
 	addition = parseFloat(addition) || 1;
 
@@ -2569,6 +2608,9 @@ template.loop = function(grade, variable, xml, from, to, addition) {
 		cloneHTML += cloneXML.innerHTML;
 	}
 	xml.outerHTML = cloneHTML;
+}
+template.forBlock = function(grade, variable, xml) {
+	
 }
 template.foreach = function(grade, variable, xml) {
 	var items = xml.getAttribute("items");
@@ -2589,12 +2631,20 @@ template.foreach = function(grade, variable, xml) {
 	try {
 		items = eval(items);
 	} catch(e) {
-		throw new Error("Parsing Error : " + items);	
+		//console.error(_tab(grade), "foreach", xml);
+		throw new Error(grade + " Parsing Error in foreach: " + items);	
 	}
 	var type = daylight.type(items);
 	
 	var cloneXML;
 	var cloneHTML = "";
+	var originalXML = xml;
+	if(xml.nodeName !== "FOREACH") {
+		//originalXML = xml.cloneNode(true);
+		xml.removeAttribute("items");
+		xml.removeAttribute("var");
+		xml.removeAttribute("foreach");
+	}
 	for(var key in items) {
 		cloneXML = (xml.cloneNode(true));
 		this.defineVariable(grade + 1, variable, name, items[key]);
@@ -2602,14 +2652,19 @@ template.foreach = function(grade, variable, xml) {
 		this.readChildren(grade, variable, cloneXML);
 		cloneHTML += cloneXML.innerHTML;
 	}
-	//var elements = daylight.parseHTML(cloneHTML);
-	xml.outerHTML = cloneHTML;
+
+	if(xml.nodeName !== "FOREACH")
+		xml.innerHTML = cloneHTML;
+	else
+		xml.outerHTML = cloneHTML;
+	
 }
 template.defineVariable = function(grade, variable, name, value) {
 	variable[grade] = variable[grade] || {};
 	variable[grade][name] = value;
 	
-	//console.debug("defineVariable",grade, name, variable[grade][name]);
+	
+	//console.debug(_tab(grade), "defineVariable",grade, name, variable[grade][name]);
 }
 daylight.template.setVariable = function(grade, variable, xml) {
 	
@@ -2741,6 +2796,11 @@ template.read = function(grade, variable, xml) {
 		this.getVariable(grade, variable, xml);
 		return;
 	}
+	
+	
+	
+	if(xml.getAttribute("foreach") !== null)
+		this.foreach(grade, variable, xml);
 	this.readChildren(grade, variable, xml);
 	return;
 }
@@ -2758,7 +2818,7 @@ template.readChildren = function(grade, variable, xml) {
 }
 template.global = function(info, text) {
 	var variables = text.match( /\{=([A-Za-z_\.]*)\}/gi) || [];
-	console.log(variables);
+	//console.log(variables);
 	var length = variables.length;
 	var _variable, value, scopeLength, j;
 	for(var i = 0; i < length; ++i) {
