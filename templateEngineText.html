@@ -3,13 +3,25 @@
 <body>
 	<div class="hi">
 		<set name="v1" value="v3"></set> 
-		<foreach var="hi" items="{items}">
-			<block cond="{key}!=1">
-				<set name="item" in="items">{key}</set>
+		<foreach var="hi" items="@items">
+			<block cond="@key!=1">
+				<set name="item" in="items">@key</set>
 				items[<var>key</var>] is <var>item</var><br/>
+			</block>
+		</foreach>
+		<foreach var="hi" from="1" to="4">
+			<block cond="@index!=1">
+				<set name="item" in="items">{@index - 1}</set>
+				items[<var>index</var>] is <var>item</var><br/>
 			</block>
 		</foreach>
 	</div>
 </body>
 </html>
-<script>daylight.templateEngine({items:[1,2,3,4]}, $("body")[0]);</script>
+<script>
+	daylight.templateEngine({items:[1,2,3,4]}, $("body")[0]);
+	daylight.template.loadURL("../animation/tools/template/property.xml", function(template) {
+		template.compile({title:"sads1"});
+		console.log(template.html);
+	});
+</script>
