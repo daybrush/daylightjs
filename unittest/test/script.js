@@ -1,0 +1,1 @@
+$.ajax("http://daybrush.com").done(function(v) {console.log(v);});

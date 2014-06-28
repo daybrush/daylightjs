@@ -1,0 +1,67 @@
+<meta charset="utf-8"/>
+<body>
+<script src="../../daybrush_board/js/jquery.js"></script>
+<script src="../daylight.js"></script>
+<script src="../daylight.Event.js"></script>
+<script src="unittest.js"></script>
+<style>
+	th {
+		text-align: left;
+		width: 200px;
+		background: #f4f4f4;
+	}
+	th,td {
+		padding-left:10px;
+	}
+	th.result {
+		width: 100px;
+	}
+</style>
+<a href="#">GEK</a>
+<div class="">
+	<input type="text" class="testInput" value="?" />
+	<span>asdas</span>
+	<span class="tog">asdas</span>
+	<span class="tog2">asdas</span>
+</div>
+<div class="saa">asa</div>
+<div class="parent">hellow
+	<div class="child tog2">aa
+		<div class="child2">
+		bb
+		</div>
+	</div>
+</div>
+<table id="viewConsole">
+	<tr>
+	<th class="name">TEST NAME</th>
+	<th class="result">RESULT</th>	
+	<th class="message">MESSAGE</th>
+	<th class="function">func</th>	
+	</tr>
+</table>
+</body>
+<script>
+setConsole(daylight("#viewConsole"));
+this.setConsole(daylight("#viewConsole"));
+var newfunc = function() {};
+var element = document.getElementsByClassName("name")[0];
+$test("object Instance Speed").assertSpeed(function() {return new newfunc();}, 100);
+$test("DOM GET").assertSpeed(function() {document.querySelectorAll('span');});
+$test("daylight Instance Speed").assertSpeed(function() {return daylight([]);});
+$test("daylight.isNode").assertSpeed(function() {daylight.isNode(element);});
+$test("daylight.type").assertSpeed(function() {daylight.type("HELLO");}, 50);
+$test("daylight('span')의 속도 ").assertSpeed(function() {daylight('span')}, 200);
+$test("jQuery('span')의 속도 ").assertSpeed(function() {jQuery('span')}, 200);
+$test("css속도 ").assertSpeed(function() {daylight('span').css("width")}, function() {jQuery('span').css("width")});
+$test("daylight와 jQuery toggle속도 비교").assertSpeed(function() {daylight('span').toggleClass("tog")}, function(){jQuery('span').toggleClass("tog")});
+$test("daylight와 jQuery hasClass속도 비교").assertSpeed(function() {daylight('.tog2').hasClass("tog")}, function(){jQuery('.tog2').hasClass("tog")});
+$test("daylight와 jQuery addClass속도 비교").assertSpeed(function() {daylight('span').addClass("tog1")}, function(){jQuery('span').addClass("tog1")});
+$test("daylight와 jQuery removeClass속도 비교").assertSpeed(function() {daylight('.tog2').removeClass("tog1")}, function(){jQuery('.tog2').removeClass("tog1")});
+$test("daylight와 jQuery filter속도 비교").assertSpeed(function() {daylight('.tog2').filter(function(v, index){return true;});}, function(){jQuery('.tog2').filter(function(v, index){return true;});});
+$test("daylight와 jQuery next속도 비교").assertSpeed(function() {daylight('span').next()}, function(){jQuery('span').next()});
+$test("daylight와 jQuery prev속도 비교").assertSpeed(function() {daylight('span').prev()}, function(){jQuery('span').prev()});
+$test("daylight와 jQuery each속도 비교").assertSpeed(function() {daylight('span').each(function() {})}, function(){jQuery('span').each(function() {})});
+$test("daylight와 jQuery val속도 비교").assertSpeed(function() {daylight('.testInput').val();}, function(){jQuery('.testInput').val();});
+$test("daylight와 jQuery parent속도 비교").assertSpeed(function() {daylight('div.child2').parent();}, function(){jQuery('div.child2').parent();});
+</script>

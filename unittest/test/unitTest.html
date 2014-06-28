@@ -1,0 +1,94 @@
+<html>
+<head>
+<meta charset="utf-8"/>
+</head>
+<body>
+<script src="../daylight.js"></script>
+<script src="../daylight.Event.js"></script>
+<script src="unittest.js"></script>
+
+<style>
+	th {
+		text-align: left;
+		width: 200px;
+		background: #f4f4f4;
+	}
+	th,td {
+		padding-left:10px;
+	}
+	th.result {
+		width: 100px;
+	}
+	.testInput {
+		border:1px solid black;
+		padding:1px;
+	}
+</style>
+<a href="#">GEK</a>
+	<input type="text" class="testInput" value="?" />
+<div class="">
+	<span>asdas</span>
+	<span class="tog">asdas</span>
+	<span>asdas</span>
+
+</div>
+<div class="saa">asa</div>
+<div class="parent">hellow
+	<div class="child">aa
+		<div class="child2">
+		bb
+		</div>
+	</div>
+</div>
+<div class="append_target">
+append_target
+</div>
+<div class="append_test">test</div>
+<table id="viewConsole">
+	<tr>
+	<th class="name">TEST NAME</th>
+	<th class="result">RESULT</th>	
+	<th class="message">MESSAGE</th>
+	<th class="function">func</th>	
+	</tr>
+</table>
+
+</body>
+<script>
+setConsole(daylight("#viewConsole"));
+this.setConsole(daylight("#viewConsole"));
+$test('daylight("span").size == 3').assertEqual(daylight("span").size(), 3);
+$test('daylight("span").next().size == 2').assertEqual(daylight("span").next().size(), 2);
+$test('span 검색').assertListEqual(daylight("span").o, document.getElementsByTagName("span"));
+$test('클래스 있는지 검사').assertTrue(daylight(".saa").hasClass("saa"));
+$test('html 있는지 검사').assertEqual(daylight(".saa").ohtml(), '<div class="saa">asa</div>');
+assertEqual(daylight(".saa").html(), 'asa');
+$test('prepend검사').assertEqual(daylight("span:nth-child(3)").prepend("hello").html(), 'helloasdas');
+$test('append검사').assertEqual(daylight(".append_test").append(document.querySelector(".append_target")).html(), 'test<div class="append_target">\nappend_target\n</div>');
+$test('after, next검사').assertEqual(daylight("span:nth-child(3)").after("<a href=''>헐</a>").next().html(), '헐');
+$test('prev 검사 ').assertNotIn(document.querySelector("span:nth-child(3)"), daylight("span").prev().o);
+$test('attr 검사').assertEqual(daylight("span").attr("tog", "dd").attr("tog"), "dd");
+$test('toggleClass, filter 검사').assertListEqual(daylight("span").toggleClass("tog").filter(function(v, index){return daylight.hasClass(v, "tog");}).o, document.getElementsByClassName("tog"));
+$test('val 검사 1').assertEqual(daylight("input").val(), "?");
+$test('parent 검사 1').assertEqual(daylight(".child2").parent().o[0], document.getElementsByClassName("child")[0]);
+$test('parent 검사 2').assertEqual(daylight(".child2").parent(2).o[0], document.getElementsByClassName("parent")[0]);
+$test('width').assertEqual(daylight(".testInput").width(), daylight(".testInput").o[0].clientWidth - 2);
+$test('inner Height').assertEqual(daylight(".testInput").innerHeight(), daylight(".testInput").o[0].clientHeight);
+$test('outer Width').assertEqual(daylight(".testInput").outerWidth(), daylight(".testInput").o[0].offsetWidth);
+$test('outer Height').assertEqual(daylight(".testInput").outerHeight(true), daylight(".testInput").o[0].offsetHeight + 4);
+
+daylight(".append_test").remove(".append_target");//처리.
+$test('remove검사').assertEqual(daylight(".append_target").size(), 0);
+daylight(".append_test").remove();
+$test('remove검사2').assertEqual(daylight(".append_test").size(), 0);
+daylight(".testInput").focus(function(e) {
+	var event = daylight.$Event(e);
+	$test('Event검사').assertEqual(event.currentElement, this);
+})
+
+daylight("body").drag(function(e) {
+	
+});
+</script>
+
+</html>
