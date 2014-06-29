@@ -124,10 +124,10 @@ daylight.$E = {
 	}
 });
 	
-//@{event/trigger.js}
-//@{event/on.js}
-//@{event/drag.js}
-//@{event/visible.js}
+//@{trigger.js}
+//@{on.js}
+//@{drag.js}
+//@{visible.js}
 
 prototype.extend({
 	wheel: function(func) {

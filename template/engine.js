@@ -1,13 +1,5 @@
-//@{template/XMLParser.js}
+//@{XMLParser.js}
 
-txt="<note cond='{a}!={b}'>";
-txt+="<set name='abc'>Tove</set>";
-txt+="<from>Jani</from>";
-txt+="<foreach  var='item' items='{items}'>";
-	txt+="<var name='abc'/>";
-txt+="</foreach>";
-txt+="<body>Don't forget me this weekend!</body>";
-txt+="</note>";
 var template = daylight.template;
 var _tab = function(grade) {
 	return daylight.repeat("   ", grade);
