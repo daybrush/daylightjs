@@ -201,9 +201,12 @@ daylight.extend({
 //@{template/engine.js}
 
 
-//@{ajax/ajax.js}
 
 
 //@{extend.js}
 
 })(window);
+
+
+
+//@{ajax/ajax.js}
