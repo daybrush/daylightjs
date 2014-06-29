@@ -174,6 +174,7 @@ var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 	case "string":
 		return $o.query(obj, element);
 	case "nodelist":
+	case "elementlist":
 		return obj;
 	case "element":
 	case "htmlcollection":
@@ -186,6 +187,7 @@ var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 };
 
 daylight.type = _checkType;
+prototype.daylight = sDaylight;
 prototype.size = function() {
 	return this.length;
 }
@@ -1494,12 +1496,23 @@ eventPrototype.key = function() {
 		down		: (keyCode == 40),
 		left		: (keyCode == 37),
 		right		: (keyCode == 39),
-		enter		: (keyCode == 13),		
+		enter		: (keyCode == 13),	
+		space		: (keyCode == 32),	
 		esc			: (keyCode == 27),
 		command		: (keyCode == 91),
 		character	: String.fromCharCode(keyCode)
 	};
-
+	if(ret.up)
+		ret.character = "up";
+	else if(ret.down)
+		ret.character = "down";
+	else if(ret.left)
+		ret.character = "left";
+	else if(ret.right)
+		ret.character = "right";
+	else if(ret.space)
+		ret.character = "space";
+		
 	return ret;
 };
 

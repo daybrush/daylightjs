@@ -86,6 +86,7 @@ var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 	case "string":
 		return $o.query(obj, element);
 	case "nodelist":
+	case "elementlist":
 		return obj;
 	case "element":
 	case "htmlcollection":
@@ -98,6 +99,7 @@ var daylight = window.daylight = window.$ = window.$o = function(obj, element) {
 };
 
 daylight.type = _checkType;
+prototype.daylight = sDaylight;
 prototype.size = function() {
 	return this.length;
 }
