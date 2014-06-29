@@ -30,5 +30,6 @@ def analyze(file):
 
 contents = analyze("daylight.js")
 writeFile("daylight.all.js", contents)
+writeFile("../animation/lib/daylight.all.js", contents)
 writeFile("daylight.all.min.js", contents)
 #minify("daylight.all.min.js", contents)
