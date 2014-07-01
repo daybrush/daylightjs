@@ -1,56 +1,11 @@
 (function(daylight) {
 	var template = daylight.template;
-	
-	var compile = template.compile = {};
-	template.defineVariable = function(grade, variable, name, value) {
-		variable[grade] = variable[grade] || {};
-		variable[grade][name] = value;
-	}
-	compile.getFullVariableName = function(grade, variable, name, is_eval) {
-		var length = grade;
-		for(var i = grade; i >= 0; i--) {
-			if(!variable.hasOwnProperty(i))
-				continue;
-			
-			if(!variable[i])
-				continue;
-			
-			if(!variable[i].hasOwnProperty(name))
-				continue;
-				
-			if(is_eval)
-				return "variable[" + i + "]." + name;
-			return "variable[" + i + "]." + name;
-		}
-		
-		return "variable.info." + name;
-	}
-	compile.replaceVariableName = function(grade, variable, text, is_eval) {
-		if(!text)
-			return "";
-		
-		var imVariables = text.match( /\@([A-Za-z0-9_]+)/gi) || [];//즉시 실행 변수
-		var length = imVariables.length;
-		var _variable, name, value, scopeLength, j;
-		for(var i = 0; i < length; ++i) {
-			_variable = imVariables[i].replace("@", "");
-			_variable = this.getFullVariableName(grade, variable, _variable);
-			text = text.replaceAll(imVariables[i], "@(" + _variable + ")");
-		}
-		
-		var runVariables = text.match( /\$([A-Za-z0-9_]+)/gi) || [];//즉시 실행 변수
-		length = runVariables.length;
-		var _variable, name, value, scopeLength, j;
-		for(var i = 0; i < length; ++i) {
-			_variable = runVariables[i].replace("$", "");
-			_variable = this.getFullVariableName(grade, variable, _variable, is_eval);
-			text = text.replaceAll(runVariables[i],  (is_eval ? "" : "$") + _variable);
-		}
-		return text;
-	}
+	var dEval = window.eval;
+	var compile = {};
+
 	compile.tag = function(text) {
-		var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|for|set)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
-		var tagReg = /(<(\/|.)?(var|foreach|block|for|if|set)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
+		var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|for|set|include|template)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
+		var tagReg = /(<(\/|.)?(var|foreach|block|for|if|set|include|template)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
 		var attributeReg = /([^\s=]+)\s*=\s*[\'\"]([^<\'\"]*)[\'\"]/g;
 		var grade = 0;
 		var variable = {};
@@ -93,7 +48,7 @@
 				if(sName === "var" || sName === "set")
 					text = text.replace(result[0], "{"+sName+sAttribute+"}");
 				else
-					text = text.replace(sNode, "{"+sName+sAttribute+"}");
+					text = text.replace(sNode +" ", "{"+sName+sAttribute+"}");
 			}
 		}
 		return text;
@@ -107,7 +62,8 @@
 	tagsets.foreachBlock = function(grade, variable, attributes) {
 		var items =attributes["items"];// compile.replaceVariableName(grade, variable, );
 		var name = attributes["var"];
-		return name + " in " + items;
+		var key = attributes["key"] || "_";
+		return key + " to " + name + " in " + items;
 	}
 	
 	tagsets.varBlock = function(grade, variable, attributes) {
@@ -125,8 +81,23 @@
 		var name = attributes["var"];
 		var from = attributes["from"];
 		var to = attributes["to"];
-		var addition = attributes["addiation"] || 1;
+		var addition = attributes["add"] || attributes["addition"] || 1;
 		return  name + " = " + from + " to " + to + " add " + addition;
+	}
+	tagsets.templateBlock = function(grade, variable, attributes) {
+		//for i=1 to 4 add 1
+		var name = attributes["name"];
+		var args = attributes["args"];
+		return name +" " + args;
+	}
+	tagsets.includeBlock = function(grade, variable, attributes) {
+		//for i=1 to 4 add 1
+		var name = attributes["name"];
+		var args = attributes["args"] || attributes["template-data-text"];
+		if(args)
+			return name + " " + args;
+		else
+			return name;
 	}
 	compile.brace = function(text) {
 		var token = "-%daylightT%-&@-";
@@ -143,7 +114,6 @@
 		divisionText = divisionText.replace(splitter, token+"$1"+token).split(token);
 		var length = divisionText.length;
 		
-		
 		return (function(texts) {
 			//console.log(texts);
 			var code = [];
@@ -158,10 +128,13 @@
 			code.push("(function(args) {");
 			code.push("args = args || {};");
 			code.push("with (args) {");
+			code.push("var window = null;");
+			code.push("var texts = [];");
 			code.push("var text = \"\";");
+			
 			for(var i = 0; i < length; i += 2) {
 				text = texts[i + 0].replace(/\"/g, "\\\"");
-				code.push("text = text + \"" + text +"\";");
+				code.push("texts.push(\"" + text +"\");");
 	
 				if(!texts[i + 1])
 					continue;
@@ -173,7 +146,11 @@
 					
 					sEnd = result[2];
 					if(sEnd) {
-						code.push("}");
+						func = bracesets[result[3] + "BlockEnd"];
+						if(func)
+							func(code, result[4]);
+						else
+							code.push("}");
 					} else {
 						func = bracesets[result[3] + "Block"];
 						if(func)
@@ -181,53 +158,103 @@
 					}
 				});
 			}
-			code.push("return text;");
-			code.push("}");
+			code.push("return texts.join(\"\");");
+			code.push("};");
 			code.push("});");
 			var codeText = code.join("\n");
 			
+			
+			//console.log(codeText);
 			return compile.ev(codeText);
 			
 			
 		})(divisionText);
 	
 	};
-	
-	var bracesets = daylight.template.compile.brace.sets = {};
+	compile.ev = function(codeText) {
+		return dEval(codeText).bind({});
+	};
+	var bracesets = compile.brace.sets = {};
 	bracesets.foreachBlock = function(code, attr) {
-		var items = attr.split(" in ");
-		code.push("for(var key in " + items[1] +") {");
-		code.push("var " + items[0] + " = " + items[1] + "[key];");
+		//{foreach key to item in items]
+		var items = attr.split(/\s(to|in)\s/);
+		var length = items.length;
+		var _key = "", _item, _items;
+		if(length === 3) { //not key
+			_key = "";
+			_item = items[0];
+			_items = items[2];
+		} else if(length === 5) {
+			_key = ", " + items[0];
+			_item = items[2];
+			_items = items[4];
+		} else {
+			throw new Error("Syntax Error: foreach");
+		}
+		code.push("daylight.each(" + _items + ", function(" + _item + _key + ") {");
+		//code.push("var " + items[0] + " = " + items[1] + "[key];");
+	};
+	bracesets.foreachBlockEnd = function(code, attr) {
+		code.push("});");
 	};
 	bracesets.forBlock = function(code, attr) {
 		//{for i = 1 to 4 add 1}
 		
 		var items = attr.split(/\s?(to|=|add)\s?/g);
-		if(items.length !== 7)
+		var length = items.length;
+		if(length !== 7 && length !== 5)
 			throw new Error("Syntax Error : for");
 			
 		var _var = items[0];
-		var from = items[2];
-		var to = items[4];
-		var add = items[6];
-		code.push("for(var " + _var + "=" + from + ";" + from + "<" + to + "&&" + _var + "<=" + to +"||" + from + ">=" + to + "&&" + _var + ">=" + to + ";" + _var + "+=" + add +") {");
+		var from = items[2] || 0;
+		var to = items[4] || 0;
+		var add = items[6] || 1;
+		var t = "for(var " + _var + "=" + from + ";" + from + "<=" + to + "&&" + _var + "<=" + to +"||" + from + ">" + to + "&&" + _var + ">=" + to + ";" + _var + "+=" + add +") {"
+		code.push(t);
 	}
 	bracesets.ifBlock = function(code, attr) {
 		code.push("if(" +attr+ ") {");
 	}
 	bracesets.varBlock = function(code, attr) {
-		code.push("text = text + " + attr);
+		code.push("texts.push(" + attr + ");");
 	}
 	bracesets.setBlock = function(code, attr) {
 		code.push("var " + attr +";");
 	}
 	bracesets.varBlock = function(code, attr) {
-		code.push("text = text + " + attr +";");
+		code.push("texts.push(" + attr +");");
 	}
 	bracesets["=Block"] = function(code, attr) {
-		code.push("text = text + " + attr +";");
+		code.push("texts.push(" + attr +");");
 	}
-	
+	bracesets.templateBlock = function(code, attr) {
+		var prefixTemplate = "$T$E";
+		//{template name arg1,arg2,arg3}
+		var items = (/(\S+)\s?([\s\S]*)?/mg).exec(attr);
+		
+		var name = items[1];
+		var args = items[2] || "";
+		code.push("function " + prefixTemplate + name +"("+ args +") {");
+		code.push("var texts = [];");
+	}
+	bracesets.templateBlockEnd = function(code) {
+		code.push("return texts.join(\"\");");
+		code.push("}");
+	}
+	bracesets.includeBlock = function(code, attr) {
+		var items = (/(\S+)\s?([\s\S]*)?/mg).exec(attr);
+		if(!items)
+			throw new Error("Syntax Error : include Error not has name");//문법 고치기
+		
+		var name = items[1];
+		var args = items[2] || "";
+		var prefixTemplate = "$T$E";
+		code.push("if(typeof " + prefixTemplate + name + " === \"function\") {")
+		code.push("texts.push(" + prefixTemplate + name+"(" + args + "));");
+		code.push("}");
+	}
+	bracesets.includeBlockEnd = function(code, attr) {
+	}
 	daylight.templateEngine = function(info, txt) {
 		if(arguments.length === 1) {
 			txt = info;
@@ -236,22 +263,31 @@
 		if(!txt)
 			return;
 		var xml;
-		if(typeof txt === "object") {
+		if(daylight.isDaylight(txt)) {
+			xml = txt.html();
+		} else if(daylight.isElement(txt)) {
 			xml = txt.innerHTML;
 		} else {
 			xml = txt;
 		}
-	
-		info = info || {};
-		window.xmlxml = xml;
-	
 		
+		info = info || {};
+	
 		var variable = {};
 		variable.info = info;
 		//xml = template.global(info, xml);
-		xml = daylight.template.compile.tag(xml);
-		var func = daylight.template.compile.brace(xml);
-		xml = func(info);
+		xml = compile.tag(xml);
+		var func = compile.brace(xml);
+		var type = daylight.type(info);
+		xml = "";
+		if(type === "array") {
+			var length = info.length;
+			for(var i = 0; i < length; ++i) {
+				xml += func(info[i]);
+			}
+		} else {
+			xml = func(info);
+		}
 		return xml;
 	}
 	
@@ -274,16 +310,24 @@
 		this.html = html;
 	}
 	daylight.$TemplateEngine.prototype.compileTag = function(info) {
-		this.html = daylight.template.compile.tag(this.html);
+		this.html = compile.tag(this.html);
 	}
 	daylight.$TemplateEngine.prototype.compile = function() {
-		this.func = daylight.template.compile.brace(this.html);
+		this.func = compile.brace(this.html);
 	}
 	daylight.$TemplateEngine.prototype.process = function(info) {
 		if(!this.func)
 			this.compile();
-			
-		return this.func(info);
+		
+		var result = "";
+		try {
+			result = this.func(info);
+		} catch(e) {
+			//console.log(this.html);
+			throw e;
+		}
+		
+		return result;
 	};
 	
 	
@@ -293,12 +337,13 @@
 			return this;
 		}
 	});
-
+	String.prototype.process = function(info) {
+		if(!this.func)
+			this.func = compile.brace(this);
+			
+		return this.func(info);
+	}
 })(daylight);
 
 (function(daylight) {
-	var dEval = window.eval;
-	daylight.template.compile.ev = function(codeText) {
-		return dEval(codeText).bind({});
-	};
 })(daylight);

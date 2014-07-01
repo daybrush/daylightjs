@@ -6,10 +6,10 @@
 		<set name="va">"v3"</set>
 		<set name="v1">"v3"</set> 
 		{if v1=="v3"}aaa{/if}
-		<foreach var="item" items="items">
+		<foreach key="key" var="item" items="items">
 			<div class="test"></div>
 
-			<if cond="key!=1">
+			<if cond="item!=1">
 				<set name="item">items[key]</set>
 				items[<var>v1</var><var>key</var>] is <var>item</var><br/>
 			</if>
@@ -18,9 +18,15 @@
 			<if cond="index!=1">
 				<set name="item">index - 1</set>
 				items[<var>index</var>] is <var>item</var><br/>
+				
 			</if>
+			{include td 4}
 		</for>
+		
 	</div>
+	{template td tg}
+	{for i=1 to tg}abcde{/for}
+	{/template}
 </body>
 <script>
 $("body").templateEngine({items:[1,2,3,4]}, $("body")[0]);
