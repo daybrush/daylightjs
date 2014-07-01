@@ -13,3 +13,24 @@ prototype.extend({
 });
 daylight.extend(true, NodeListPrototype, prototype);
 daylight.extend(true, ElementListPrototype, prototype);
+
+
+
+daylight.fn = prototype;
+
+daylight.fn.extend =  function() {
+	var length = arguments.length;
+	var i = 0;
+	var target = this;
+	for(; i < length; ++i) {
+		object = arguments[i];
+		for(var key in object) {
+			if(!NodeListPrototype.hasOwnProperty(key))
+				NodeListPrototype[key] = object[key];
+			if(!ElementListPrototype.hasOwnProperty(key))
+				ElementListPrototype[key] = object[key];
+		}
+	}
+	
+	return this;
+}

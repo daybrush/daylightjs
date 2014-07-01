@@ -45,7 +45,13 @@ daylight.template = function(obj, template) {
 		return template;
 	} else {
 		//배열이나 Dictionary 형태가 아닌 다른 것들은 키를 1로 하고 value로 바꿔준다.
+		try {
 		return template.replaceAll("{1}", obj);//{1} => value
+		}
+		catch(e) {
+			console.error("?");	
+		}
+		
 	}
 	return "";
 }
@@ -55,4 +61,4 @@ daylight.template = function(obj, template) {
 prototype.template = function(o, t) {
 	this.html(daylight.template(o, t));
 	return this;
-}
+};

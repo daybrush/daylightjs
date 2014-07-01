@@ -1,29 +1,28 @@
 <html>
 <script src="./daylight.all.js"></script>
-<script>
-	$(document).ready(function() {
-		$("body").templateEngine({items:[1,2,3,4]}, $("body")[0]);
-	});
-</script>
+
 <body>
 	<div class="hi" sba>
 		<set name="va">"v3"</set>
 		<set name="v1">"v3"</set> 
-		{if "@v1"=="v3"}aaa{/if}
-		<foreach var="item" items="$items">
+		{if v1=="v3"}aaa{/if}
+		<foreach var="item" items="items">
 			<div class="test"></div>
 
-			<if cond="@key!=1">
-				<set name="item">$items[@key]</set>
-				items[<var>@v1</var><var>@key</var>] is <var>@item</var><br/>
+			<if cond="key!=1">
+				<set name="item">items[key]</set>
+				items[<var>v1</var><var>key</var>] is <var>item</var><br/>
 			</if>
 		</foreach>
-		<for from="1" to="4">
-			<if cond="@index!=1">
-				<set name="item">@index - 1</set>
-				items[<var>@index</var>] is <var>@item</var><br/>
+		<for var="index" from="1" to="4">
+			<if cond="index!=1">
+				<set name="item">index - 1</set>
+				items[<var>index</var>] is <var>item</var><br/>
 			</if>
 		</for>
 	</div>
 </body>
+<script>
+$("body").templateEngine({items:[1,2,3,4]}, $("body")[0]);
+</script>
 </html>

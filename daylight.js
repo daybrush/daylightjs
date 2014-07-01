@@ -200,7 +200,6 @@ daylight.extend({
 
 //template
 //@{template/template.js}
-//@{template/engine.js}
 
 
 
@@ -210,5 +209,5 @@ daylight.extend({
 })(window);
 
 
-
+//@{template/engine.js}
 //@{ajax/ajax.js}
