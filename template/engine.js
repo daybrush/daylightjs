@@ -1,90 +1,13 @@
 //@{XMLParser.js}
 
 var template = daylight.template;
-var _tab = function(grade) {
-	return daylight.repeat("   ", grade);
-}
-template._outerHTML = function(xml) {
-	return daylight.parseXMLtoHTML(xml.cloneNode(true)).outerHTML;
-}
-template._innerHTML = function(xml, xs) {
-	xs = xs || new XMLSerializer();
-	var childNodes = xml.childNodes;
-	var length = childNodes.length;
-	var html = "";
-	for(var i = 0; i < length; ++i) {
-		html += xs.serializeToString(childNodes[i]);
-	}
-	return html;
 
-};
-template._replace = function(xml, element) {
-	xml.parentNode.insertBefore(element, xml);
-	xml.parentNode.removeChild(xml);
-};
-template._before = function(dom, html) {
-	//dom.insertAdjacentHTML
-};
-template._remove = function(xml) {
-	xml.parentNode.removeChild(xml);
-};
-template.replaceVariableName = function(grade, variable, text) {
-	var variables = text.match( /\@([A-Za-z\.]*)/gi) || [];
-	
-	//console.log(variables);
-	var length = variables.length;
-	var _variable, value, scopeLength, j;
-	for(var i = 0; i < length; ++i) {
-		_variable = variables[i].replace("@", "");
-		_variable = _variable.split(".");
-		value = this.getVariableName(grade, variable, _variable[0]);
-		
-		
-		scopeLength = _variable.length;
-		for(j = 1; j < scopeLength; ++j) {
-			value = value + "." + _variable[j];
-		}
-		text = text.replace(variables[i], value);
-	}
-	
-	return text;
+var compile = template.compile = {};
+template.defineVariable = function(grade, variable, name, value) {
+	variable[grade] = variable[grade] || {};
+	variable[grade][name] = value;
 }
-template.replaceVariable = function(grade, variable, text) {
-	var variables = text.match( /\@([A-Za-z_\.]*)/gi) || [];
-	//var variables = text.match( /\{(.+?)\}/gi) || [];
-	var length = variables.length;
-	var _variable, value, scopeLength, j;
-	for(var i = 0; i < length; ++i) {
-		_variable = variables[i].replace("@", "");//.replace("}", "");
-		_variable = _variable.split(".");
-		value = this.variable(grade, variable, _variable[0]);
-		
-		value = this.scope(value, _variable, 1);
-		text = text.replace(variables[i], value);
-	}
-	
-	return text;
-}
-template.evalBlock = function(grade, variable, text) {
-//text = this.replaceVariableName(grade, variable, text);
-	var blocks = text.match( /\{(.+?)\}/gi) || [];
-	var length = blocks.length;
-	//var 
-	var block;
-	try {
-		for(var i = 0; i < length; ++i) {
-			block = blocks[i];
-			block = this.replaceVariable(grade, variable, block);
-			block = block.replace("{", "").replace("}", "");
-			block = eval(block);
-			text = text.replace(blocks[i], block);
-		}
-	} catch(e) {
-		throw new Error("Parsing Error : " + block);
-	}
-	return text;
-}
-template.getVariableName = function(grade, variable, name) {
+compile.getFullVariableName = function(grade, variable, name, is_eval) {
 	var length = grade;
 	for(var i = grade; i >= 0; i--) {
 		if(!variable.hasOwnProperty(i))
@@ -96,11 +19,179 @@ template.getVariableName = function(grade, variable, name) {
 		if(!variable[i].hasOwnProperty(name))
 			continue;
 			
-		
-		return "variable[" + i + "]." + name;
+		if(is_eval)
+			return "variable[" + i + "]." + name;
+		return "variable." + i + "." + name;
 	}
 	
 	return "variable.info." + name;
+}
+compile.replaceVariableName = function(grade, variable, text, is_eval) {
+	if(!text)
+		return "";
+	
+	var imVariables = text.match( /\@([A-Za-z0-9_]+)/gi) || [];//즉시 실행 변수
+	var length = imVariables.length;
+	var _variable, name, value, scopeLength, j;
+	for(var i = 0; i < length; ++i) {
+		_variable = imVariables[i].replace("@", "");
+		_variable = this.getFullVariableName(grade, variable, _variable);
+		text = text.replaceAll(imVariables[i], "@(" + _variable + ")");
+	}
+	
+	var runVariables = text.match( /\$([A-Za-z0-9_]+)/gi) || [];//즉시 실행 변수
+	length = runVariables.length;
+	var _variable, name, value, scopeLength, j;
+	for(var i = 0; i < length; ++i) {
+		_variable = runVariables[i].replace("$", "");
+		_variable = this.getFullVariableName(grade, variable, _variable, is_eval);
+		text = text.replaceAll(runVariables[i],  (is_eval ? "" : "$") + _variable);
+	}
+	return text;
+}
+compile.sets = {};
+compile.sets.setBlock = function(grade, variable, attributes) {
+	var value = attributes["value"] || attributes["template-data-text"];
+	var name = attributes["name"];
+	value = compile.replaceVariableName(grade, variable, value, true);
+	template.defineVariable(grade, variable, name, value);
+	return name + "=" + value;
+}
+compile.sets.foreachBlock = function(grade, variable, attributes) {
+	var items = compile.replaceVariableName(grade, variable, attributes["items"]);
+	var name = attributes["var"];
+	template.defineVariable(grade, variable, "key", "@key");
+	template.defineVariable(grade, variable, name, "$items[@key]");
+	return name + " in " + items;
+}
+
+compile.sets.varBlock = function(grade, variable, attributes) {
+	var name = attributes["name"] || attributes["template-data-text"];
+	name = compile.replaceVariableName(grade, variable, name);
+	return  name;
+}
+compile.sets.ifBlock = function(grade, variable, attributes) {
+	var cond = attributes["cond"];
+	cond = compile.replaceVariableName(grade, variable, cond, true);
+	return  cond;
+}
+compile.sets.forBlock = function(grade, variable, attributes) {
+	var from = attributes["from"];
+	var to = attributes["to"];
+
+	var addition = attributes["addiation"] || 1;
+	template.defineVariable(grade, variable, "index", "@index");
+	return  from + " to " + to + " add " + addition;
+}
+daylight.template.compile.brace = function(variable, text) {
+	var tagReg = /({(\/)?(var|foreach|block|for|if|set|\=)([0-9]*)?\s?([\s\S]*?)\})/mg;
+	var copy = text;
+	var grade = 0, nodeName;
+	var replaceText = "";
+	var grade = 0;
+	var is_eval;
+	var _grade;
+	while(result = tagReg.exec(copy)) {
+		var nodeName = result[3];
+		var num = result[4];
+		var sEnd = result[2] || "";
+		is_eval = nodeName === "if" || nodeName === "set";
+		var attr = result[5] || "";
+		var is_compiled = typeof num !== "undefined";
+		if(!is_compiled)
+			attr = compile.replaceVariableName(grade, variable, attr, is_eval);
+			
+		if(nodeName === "=") {
+			//console.log(nodeName);
+			//attr = " " + attr;
+		}
+		grade = is_compiled ? parseInt(num) : grade;
+		
+		if(nodeName !== "var" && nodeName !== "set" && nodeName !== "=") {
+			grade += sEnd === "/" ? -1 : 1;				
+		}
+		
+		if(!is_compiled) {
+			if(nodeName === "var" || nodeName === "set" || nodeName === "=") {
+				_grade = grade;
+			} else {
+				_grade = (sEnd === "/" ? grade + 1 : grade);
+			}
+			if( nodeName === "=")
+				text = text.replace(result[0], "{var" + _grade + " " + attr +"}{/var" + _grade + "}");
+			else
+				text = text.replace(result[0], "{" + sEnd + nodeName + _grade + (sEnd ? "" : " ") + attr +"}");
+			//console.log("change", result[0], "to", "{" + sEnd + nodeName + grade + attr +"}");
+		}
+	
+	}
+	return text;
+}
+daylight.template.compile.tag = function(text) {
+	var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|for|set)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
+	var tagReg = /(<(\/|.)?(var|foreach|block|for|if|set)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
+	var attributeReg = /([^\s=]+)\s*=\s*[\'\"]([^<\'\"]*)[\'\"]/g;
+	var grade = 0;
+	var variable = {};
+	var depth = 0;
+	while(result = tagReg.exec(copy)) {
+		var sNode = result[1];
+		var sEnd = result[2] || "";
+		var sName = result[3];
+		var sAttributes = result[4];
+		var sText = result[5];
+		var aAttributes = {};
+		while(result2 = attributeReg.exec(sAttributes)) {
+			aAttributes[result2[1]] = result2[2];
+		}
+
+		if(sName !== "var" && sName !== "set") {
+			grade += sEnd === "/" ? -1 : 1;
+			
+			//if(sEnd === "/")
+				//variable[grade + 1] = {};
+				
+		}
+			
+		aAttributes["template-data-text"] = sText.replace(" ", ""); 
+		if(grade > depth)
+			depth = grade;
+		
+		if(sEnd === "/" ) {
+			if(sName === "var" || sName === "set")
+				text = text.replace(sNode, "{/" + sName+(grade)+"}");
+			else
+				text = text.replace(sNode, "{/" + sName+(grade+1)+"}");
+		} else {
+			var sAttribute = "";
+			var sNodeType = sName +"Block";
+			if(compile.sets[sNodeType]) {
+				sAttribute = " " + compile.sets[sNodeType](grade, variable, aAttributes);
+			}
+			if(sName === "var" || sName === "set")
+				text = text.replace(result[0], "{"+sName+grade+sAttribute+"}");
+			else
+				text = text.replace(sNode, "{"+sName+grade+sAttribute+"}");
+		}
+	}
+	
+	text = this.brace(variable, text);
+	return text;
+}
+var link = daylight.template.link = function(info, text) {
+	var copy = text;// =  text.replace(/({(\/|.)?(var|foreach|block|if|for|set)([0-9]+)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'"}])*})/g, "$1 ");
+	var variable = {info:info};
+	return this.link.analyze(variable, text);
+}
+link.defineVariable = function(grade, variable, name, value, contents) {
+	variable[grade] = variable[grade] || {};
+	variable[grade][name] = value;
+
+	if(typeof contents === "undefined")
+		return;
+		
+	contents = contents.replaceAll("@(variable." + grade +"." + name +")", value);
+	return contents;
 }
 template.scope = function(value, scopes, j) {
 	j = j || 0;
@@ -110,280 +201,138 @@ template.scope = function(value, scopes, j) {
 			value = value[scopes[j]];
 		}
 	} catch(e) {
+		console.error(scopes, j);
 		throw new Error("No Scope");
 	}
 	return value;
 }
-template.variable = function(grade, variable, name) {
-	var length = grade;
-	var name = name.split(".");
-	for(var i = grade; i >= 0; i--) {
-		if(!variable.hasOwnProperty(i))
-			continue;
+
+link.getImVariable = function(variable, text) {
+	var copy = text;
+	var reg =  /\@\(([A-Za-z0-9\.]*)\)/gi;
+	var _variable, _variables;
+	while(_variables = reg.exec(copy)) {
+		_variable = _variables[1];
+		_variable = link.getVariable (variable, "$" + _variable);
+		text = text.replaceAll(_variables[0], _variable);
+	}
+	return text;
+}
+link.getVariable = function(variable, text) {
+
+	var _variables = text.match( /\$([A-Za-z0-9\.]*)/gi) || [];
+	var _variable, lengh = _variables.length;
+	for(var i = 0; i < lengh; ++i) {
+		_variable = _variables[i].replace("$","");//.replace(")");
+		_variable = _variable.split(".");
+		_variable = template.scope(variable[_variable[1]], _variable, 2);
+		return _variable;
+	}
+	
+	return text;
+}
+link.getTotalVariable = function(variable, text) {
+	var v = this.getImVariable(variable, text);
+	return link.getVariable(variable, v);
+}
+link.sets = {
+	foreachBlock: function(grade, variable, attr, contents) {
+		var item = attr.split(" in ");
+		var _var = item[0];
+		var _items = link.getVariable(variable, item[1]);
+		variable[grade] = {};
+
+		var _item;
 		
-		if(!variable[i])
-			continue;
-		
-		if(!variable[i].hasOwnProperty(name[0]))
-			continue;
+		text = "";
+
+
+		for(var i in _items) {
+			var copyContents = contents;
+			_item = _items[i];
+			copyContents = link.defineVariable(grade, variable, "key", i, copyContents);
+			copyContents = link.defineVariable(grade, variable, _var, _items[i], copyContents);
 			
-		
-		return this.scope(variable[i], name);
-	}
-	
-	return this.scope(variable.info, name);
-}
-template.condition = function(grade, variable, cond) {
-	cond = this.replaceVariableName(grade, variable, cond);
-	try {
-		
-			var v = !!eval(cond);
-		//console.debug("condition", cond, v);
-	}catch(e) {
-		console.error("Parsing error condition :", cond)
-	}
-	return v;
-}
-template.ifblock = function(grade, variable, xml, nodeName) {
-	if(nodeName === "elseif" || nodeName === "else") {
-		var name = daylight(xml).prev().nodeName();
-		if(name !== "if" && name !== "elseif") {
-			throw new Error("Parsing Error: No If Block");
+			text += link.analyze(variable, copyContents);
 		}
-	}
-	
-}
-template.loop = function(grade, variable, xml, from, to, addition) {
-	try {
-		from = this.replaceVariableName(grade, variable, from);
-		from = eval(from);
-	} catch(e) {
-		throw new Error("Parsing Error in loop from : " + from );
-	}
-	try {
-		to = this.replaceVariableName(grade, variable, to);
-		to = eval(to);
-	} catch(e) {
-		throw new Error("Parsing Error in loop to : " + to);
-	}
-	addition = parseFloat(addition) || 1;
-
-	var cloneXML;
-	var cloneHTML = "";
-	for(var i = from;addition >= 0 && i <= to || addition < 0 && i >= to; i+= addition) {
-		cloneXML = (xml.cloneNode(true));
-		this.defineVariable(grade + 1, variable, "index", i);
-		this.readChildren(grade, variable, cloneXML);
-		cloneHTML += cloneXML.innerHTML;
-	}
-	xml.outerHTML = cloneHTML;
-}
-template.forBlock = function(grade, variable, xml) {
-	
-}
-template.foreach = function(grade, variable, xml) {
-	var items = xml.getAttribute("items");
-	var name = xml.getAttribute("var");
-	
-	if(!items || !name) {
-		var from = xml.getAttribute("from");
-		var to = xml.getAttribute("to");
-		var addition = xml.getAttribute("addition");
-		if(from === null || to === null) {
-			xml.parentNode.removeChild(xml);
-			return;
-		}
-		template.loop(grade, variable, xml, from, to, addition);
-		return;
-	}
-	items = this.replaceVariableName(grade, variable, items);
-	try {
-		items = eval(items);
-	} catch(e) {
-		//console.error(_tab(grade), "foreach", xml);
-		throw new Error(grade + " Parsing Error in foreach: " + items);	
-	}
-	var type = daylight.type(items);
-	
-	var cloneXML;
-	var cloneHTML = "";
-	var originalXML = xml;
-	if(xml.nodeName !== "FOREACH") {
-		//originalXML = xml.cloneNode(true);
-		xml.removeAttribute("items");
-		xml.removeAttribute("var");
-		xml.removeAttribute("foreach");
-	}
-	for(var key in items) {
-		cloneXML = (xml.cloneNode(true));
-		this.defineVariable(grade + 1, variable, name, items[key]);
-		this.defineVariable(grade + 1, variable, "key", key);
-		this.readChildren(grade, variable, cloneXML);
-		cloneHTML += cloneXML.innerHTML;
-	}
-
-	if(xml.nodeName !== "FOREACH")
-		xml.innerHTML = cloneHTML;
-	else
-		xml.outerHTML = cloneHTML;
-	
-}
-template.defineVariable = function(grade, variable, name, value) {
-	variable[grade] = variable[grade] || {};
-	variable[grade][name] = value;
-	
-	
-	//console.debug(_tab(grade), "defineVariable",grade, name, variable[grade][name]);
-}
-daylight.template.setVariable = function(grade, variable, xml) {
-	
-	var name = xml.getAttribute("name");
-	if(name === null || name === "")
-		return;
-	
-	var value = xml.innerText || xml.getAttribute("value") || "";
-	value = this.evalBlock(grade, variable, value);
-	
-	var objText = xml.getAttribute("in");
-	if(objText) {
-		var obj = this.variable(grade, variable, objText);
-		value = this.replaceVariable(grade, variable, value);
-		if(obj)
-			this.defineVariable(grade, variable, name, obj[value]);		
-	} else {
-		this.defineVariable(grade, variable, name, value);
-	}
-
-	this._remove(xml);
-}
-daylight.template.getVariable = function(grade, variable, dom) {
-	var name = dom.innerText || dom.getAttribute("name");
-	if(name === null || name === "") {
-		dom.outerHTML = "";
-		return;
-	}
-	var value = "";
-	var objText = dom.getAttribute("in");
-	
-	name = this.replaceVariable(grade, variable, name);
-	if(objText) {
-		var obj = this.variable(grade, variable, objText);
-		if(obj)
-			value = obj[name];
-	} else {
-		value = template.variable(grade, variable, name);
-	}
-	dom.outerHTML = value;
-
-}
-daylight.template.func = {
-	addClass: function( c1, c2) {
-		var length = arguments.length;
 		
-		for(var i = 0; i < length; ++i) {
-			this.className += " " + arguments[i];
-		}
+		return text;
+
 	},
-	attr: function(name, value) {
-		this.setAttribute(name, value);
+	varBlock : function(grade, variable, attr, contents) {
+		var value = link.getImVariable(variable, attr);
+		value = link.getVariable(variable, value);
+		return value;
 	},
-	css: function() {
-		var length = arguments.length;
-		var cssText = this.style.cssText;
-		var name, value;
-		for(i = 0; i < length; i += 2) {
-			name = arguments[i * 2 + 0];
-			value = arguments[i * 2 + 0];
-			cssText += name  +": " + value + ";";
+	setBlock: function(grade, variable, attr) {
+		var item = attr.split("=");
+		var name = item[0];
+		var value = link.getImVariable(variable, item[1]);
+		try {
+			value = eval(value);
+		} catch(e) {
+			//console.error()
+			throw new Error("Syntax Error : " + item[1]);
 		}
-		this.style.cssText = cssText;
-	}
-}
-template.call = function(grade, variable, xml, call) {
-	var callList = call.split("|");
-	var length = callList.length;
-	var func, parameters, plength;
-	var i, j, is_eval;
-	for(i = 0; i < length; i += 2) {
-		func = callList[i * 2 + 0];
-		parameters = callList[i * 2 + 1].split(",");
-		plength = parameters.length;
-		for(j = 0; j < plength; ++j) {
-			parameters[j] = this.replaceVariable(grade, variable, parameters[j]);
-		}
-		this.func[func] && this.func[func].apply(xml, parameters);
-		
-		
-	}
-}
-template.read = function(grade, variable, xml) {
-	if(!xml)
-		return;
-		
-		
-	if(xml.nodeType !== 1) {
-		return;
-	}
-	var nodeName = xml.nodeName.toLowerCase();
-	var cond = xml.getAttribute("cond");
-	var call;
-	if(cond) {
-		var is_result = this.condition(grade, variable, cond);
-		call = xml.getAttribute("cond-call");
-		xml.removeAttribute("cond-call");
-		xml.removeAttribute("cond");
-		
-		
-		if(!is_result && !call) {
-			this._remove(xml);
-			return;
-		}
-		if(nodeName === "block" || nodeName === "if") {
-			this.readChildren(grade, variable, xml);
-			xml.outerHTML = xml.innerHTML;
-			return;
-		}
-		
-		if(is_result && call) {
+		link.defineVariable(grade, variable, name, value);
+		return "";
+	},
+	ifBlock: function(grade, variable, attr, contents) {
+		var cond = link.getImVariable(variable, attr);
+		try {
+			var is_result = !!eval(cond);
+			if(is_result) {
+				return link.analyze(variable, contents);
+			}
 			
-			this.call(grade, variable, xml, call);	
-		} 
-	}
+		} catch(e) {
+			throw new Error("Synstax Error : " + attr + "    " + cond);
+		}
+		return "";
+	},
+	forBlock: function(grade, variable, attr, contents) {
+		var item = attr.split(" to ");
+		var from = parseFloat(link.getTotalVariable(variable, item[0]));
 		
-	if(call = xml.getAttribute("call")) {
-		this.call(grade, variable, xml, call);
-		xml.removeAttribute("call");
+		var item2 = item[1].split(" add ");
+		var to = parseFloat(link.getTotalVariable(variable, item2[0]));
+		var addition = item2[1]? parseFloat(link.getTotalVariable(variable, item2[1])): from > to ? -1 : 1;
+
+		variable[grade] = {};
+
+		var _item;
+		
+		var text = "";
+		for(var i = from; from < to && i <= to || from >= to && i >= to; i += addition) {
+			var copyContents = contents;
+			copyContents = link.defineVariable(grade, variable, "index", i, copyContents);
+			text += link.analyze(variable, copyContents);
+		}
+		
+		return text;
 	}
-	switch(nodeName) {
-	case "foreach":	
-		this.foreach(grade, variable, xml);
-		return;
-	case "set":
-		this.setVariable(grade, variable, xml);
-		return;
-	case "var":
-		this.getVariable(grade, variable, xml);
-		return;
+};
+link.braceReg = /({((var|foreach|block|for|if|set)([0-9]+))\s*((?:"[^"]*"['"]*|'[^']*'['"]*|[^'"}])*)})([\s\S]*?)\{\/\2\}/g;
+link.analyze = function(variable, text) {
+
+	var copy = text;
+	var tagReg = link.braceReg;
+	var result2, fun, resultText;
+	while(result = tagReg.exec(copy)) {
+		var outer = result[0];
+		var nodeName = result[3];
+		var _grade = result[4];
+		var attributes = result[5];
+		var contents = result[6];
+		func = this.sets[nodeName + "Block"];
+
+		resultText = "";
+		if(func)
+			resultText = func(_grade, variable, attributes, contents);
+		text = text.replace(outer, resultText);
 	}
 	
-	
-	
-	if(xml.getAttribute("foreach") !== null)
-		this.foreach(grade, variable, xml);
-	this.readChildren(grade, variable, xml);
-	return;
-}
-template.readChildren = function(grade, variable, xml) {
-	var childNodes = _concat(xml.childNodes);
-	var length = childNodes.length;
-	var nextGrade = grade + 1;
-	
-	variable[nextGrade] = variable[nextGrade] || {};
-	
-	for(var i = 0; i < length; ++i) {
-		daylight.template.read(nextGrade, variable, childNodes[i]);
-	}
-	delete variable[nextGrade];
+	return text;
 }
 template.global = function(info, text) {
 	var variables = text.match( /\{=([A-Za-z_\.]*)\}/gi) || [];
@@ -394,7 +343,7 @@ template.global = function(info, text) {
 		_variable = variables[i].replace("{=", "").replace("}", "");
 		_variable = _variable.split(".");
 		value = info[_variable[0]];
-		value = this.scope(value, _variable, 1);
+		value = template.scope(value, _variable, 1);
 		text = text.replace(variables[i], value);
 	}
 	
@@ -409,29 +358,27 @@ daylight.templateEngine = function(info, txt) {
 		return;
 	var xml;
 	if(typeof txt === "object") {
-		xml = txt;
+		xml = txt.innerHTML;
 	} else {
-		xml = document.createElement("div");
-		xml.innerHTML = txt;
+		xml = txt;
 	}
+
 	info = info || {};
 	window.xmlxml = xml;
 
 	
 	var variable = {};
 	variable.info = info;
+	//xml = template.global(info, xml);
+	xml = daylight.template.compile.tag(xml);
+	xml = daylight.template.link(info, xml);
 
-	daylight.template.readChildren(0, variable, xml);
 	
-	if(typeof txt === "object")
-		return xml.outerHTML;
-	else
-		return xml.innerHTML;
+	return xml;
 }
 
 prototype.templateEngine = function(info, html) {
-	this.html("");
-	this.append(daylight.templateEngine(info, html));
+	this.html(daylight.templateEngine(info, html));
 	return this;
 }
 daylight.template.loadURL = function(url, callback) {
@@ -451,15 +398,18 @@ daylight.template.loadURL = function(url, callback) {
 daylight.$TemplateEngine = function TemplateEngine(html) {
 	this.html = html;
 }
-daylight.$TemplateEngine.prototype.compile = function(info) {
-	this.html = daylight.template.global(info, this.html);
+daylight.$TemplateEngine.prototype.compileTag = function(info) {
+	this.html = daylight.template.compile.tag(this.html);
+}
+daylight.$TemplateEngine.prototype.compileBrace = function(info) {
+	this.html = daylight.template.compile.brace(this.html);
 }
 daylight.$TemplateEngine.prototype.global = function(info) {
 	return  daylight.template.global(info, this.html);
 }
 daylight.$TemplateEngine.prototype.process = function(info) {
 	var html = this.global(info);
-	return daylight.templateEngine(info, html);
+	return daylight.template.link(info, html);
 }
 
 
