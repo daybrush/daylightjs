@@ -2,22 +2,22 @@ daylight.ui = daylight.UI = {};
 daylight.UI.drag = {};
 daylight.UI.resize = {};
 daylight.UI.textedit = {};
-daylight.UI.drag.dragstart = function(e) {
+daylight.UI.drag.dragstart = function(e, data) {
 	var dlDragTarget = $(".day-drag").has(e.dragElement, true);
-	e.dragInfo.otop = parseFloat(dlDragTarget.css("top")) || 0;
-	e.dragInfo.oleft = parseFloat(dlDragTarget.css("left")) || 0;
+	data.otop = parseFloat(dlDragTarget.css("top")) || 0;
+	data.oleft = parseFloat(dlDragTarget.css("left")) || 0;
 }
-daylight.UI.drag.drag = function(e) {
+daylight.UI.drag.drag = function(e, data) {
 	var dlDragTarget = $(".day-drag").has(e.dragElement, true);
 	if(dlDragTarget.size() === 0)
 		return;
-	dlDragTarget.css("left", e.dragInfo.oleft + e.dragX);
-	dlDragTarget.css("top", e.dragInfo.otop + e.dragY);
+	dlDragTarget.css("left", data.oleft + e.dragX);
+	dlDragTarget.css("top", data.otop + e.dragY);
 	
 }
-daylight.UI.drag.dragend = function(e) {
+daylight.UI.drag.dragend = function(e, data) {
 }
-daylight.UI.resize.dragstart = function(e) {
+daylight.UI.resize.dragstart = function(e, data) {
 	var dlResizeTarget = $(".day-resize").has(e.dragElement, true);
 	if(dlResizeTarget.size() === 0)
 		return;
@@ -41,21 +41,21 @@ daylight.UI.resize.dragstart = function(e) {
 	var dlDragElement = daylight(e.dragElement);
 
 	console.debug("resize");
-	e.dragInfo.dlResizeTarget = dlResizeTarget;
-	e.dragInfo.owidth = dlResizeTarget.css("width");
-	e.dragInfo.oheight = dlResizeTarget.css("height");
-	e.dragInfo.otop = dlResizeTarget.css("top");
-	e.dragInfo.oleft = dlResizeTarget.css("left");
-	e.dragInfo.obottom = dlResizeTarget.css("bottom");
-	e.dragInfo.oright = dlResizeTarget.css("right");
-	e.dragInfo.pos = dlDragElement.attr("data-direction");	
+	data.dlResizeTarget = dlResizeTarget;
+	data.owidth = dlResizeTarget.css("width");
+	data.oheight = dlResizeTarget.css("height");
+	data.otop = dlResizeTarget.css("top");
+	data.oleft = dlResizeTarget.css("left");
+	data.obottom = dlResizeTarget.css("bottom");
+	data.oright = dlResizeTarget.css("right");
+	data.pos = dlDragElement.attr("data-direction");	
 	
 }
-daylight.UI.resize.drag = function(e) {
-	if(!e.dragInfo.dlResizeTarget)
+daylight.UI.resize.drag = function(e, data) {
+	if(!data.dlResizeTarget)
 		return;
 		
-	var dlResizeTarget = e.dragInfo.dlResizeTarget;
+	var dlResizeTarget = data.dlResizeTarget;
 
 	if(dlResizeTarget.size() === 0)
 		return;
@@ -75,7 +75,7 @@ daylight.UI.resize.drag = function(e) {
 		length = dlResizeTarget.size();
 	}
 	
-	var info = e.dragInfo;
+	var info = data;
 	var pos = info.pos;
 	var properties = {};
 	
@@ -124,11 +124,11 @@ daylight.UI.resize.drag = function(e) {
 	
 	dlResizeTarget.trigger("resize", {direction:{n:bPosN, s:bPosS, w:bPosW, e:bPosE}});	
 }
-daylight.UI.resize.dragend = function(e) {
-	if(!e.dragInfo.dlResizeTarget)
+daylight.UI.resize.dragend = function(e, data) {
+	if(!data.dlResizeTarget)
 		return;
 		
-	e.dragInfo.dlResizeTarget.trigger("endresize");
+	data.dlResizeTarget.trigger("endresize");
 }
 
 daylight.ui.textedit.setText = function(dlTarget, text) {
@@ -186,8 +186,8 @@ daylight.ui.textedit.event = function() {
 	});
 }
 $(document).ready(function() {
-	$("body").drag();
-	
+	var dlBody = $("body");
+	var draggable = new Draggable(dlBody);
 	var is_drag_start = false;
 	var otop, oleft;
 	$("[data-templates]").each(function(e) {
@@ -206,34 +206,34 @@ $(document).ready(function() {
 		}
 
 	});
-	$("body").on("dragstart", function(e) {
+	draggable.dragstart(function(e, data) {
 	
 		e.stopPropagation();
 		
 		var dlElement = $(e.dragElement);
 		if(dlElement.hasClass("day-drag-draggable"))
-			daylight.UI.drag.dragstart(e);
+			daylight.UI.drag.dragstart(e, data);
 		else if(dlElement.hasClass("day-resize-draggable"))
-			daylight.UI.resize.dragstart(e);
+			daylight.UI.resize.dragstart(e, data);
 
 	});
-	$("body").on("drag", function(e) {
+	draggable.drag(function(e, data) {
 		e.stopPropagation();
 		
 		var dlElement = $(e.dragElement);
 		if(dlElement.hasClass("day-drag-draggable"))
-			daylight.UI.drag.drag(e);
+			daylight.UI.drag.drag(e, data);
 		else if(dlElement.hasClass("day-resize-draggable"))
-			daylight.UI.resize.drag(e);
+			daylight.UI.resize.drag(e, data);
 	});
-	$("body").on("dragend", function(e) {
+	draggable.dragend( function(e) {
 		e.stopPropagation();
 		
 		var dlElement = $(e.dragElement);
 		if(dlElement.hasClass("day-drag-draggable"))
-			daylight.UI.drag.dragend(e);
+			daylight.UI.drag.dragend(e, data);
 		else if(dlElement.hasClass("day-resize-draggable"))
-			daylight.UI.resize.dragend(e);
+			daylight.UI.resize.dragend(e, data);
 	});
 	//for daylight.css
 	$(".navbar-toggle").click(function(e) {

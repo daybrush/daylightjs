@@ -1,8 +1,12 @@
 //@{polyfill.js}
 (function(window) {
 
+
 var document = window.document || document;
+var docElem = document.documentElement;
+
 var NodeListPrototype = document.childNodes.__proto__;
+var HTMLCollectionPrototype = docElem.children && docElem.children.__proto__;
 var prototype = {};
 var class2type = {};
 var toString = class2type.toString;
@@ -211,3 +215,4 @@ daylight.extend({
 
 //@{template/engine.js}
 //@{ajax/ajax.js}
+//@{event/Draggable.js}

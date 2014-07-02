@@ -9,7 +9,7 @@ daylight.extend({
 	each: function(arr, callback) {
 		var type = _checkType(arr, true);
 		//배열 또는 nodelist인 경우
-		if(type === sArray || type === sNodeList || type === sElementList) {
+		if(daylight.isListType(type)) {
 			var length = arr.length;
 			for(var i = 0; i < length; ++i) {
 				callback.call(arr[i], arr[i], i, arr);//i == index, arr
@@ -27,7 +27,7 @@ daylight.extend({
 		var arr2 = [];
 		var type = _checkType(arr, true);
 		//배열 또는 nodelist인 경우
-		if(type === sArray || type === sNodeList || type === sElementList) {
+		if(daylight.isListType(type)) {
 			var length = arr.length;
 			for(var i = 0; i < length; ++i)
 				arr2[arr2.length] = callback.call(arr[i], arr[i], i, arr);

@@ -2,11 +2,12 @@
 	var template = daylight.template;
 	var dEval = window.eval;
 	var compile = {};
-
+	compile.notEndTag = ["var", "set", "include"];
 	compile.tag = function(text) {
-		var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|for|set|include|template)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
-		var tagReg = /(<(\/|.)?(var|foreach|block|for|if|set|include|template)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
-		var attributeReg = /([^\s=]+)\s*=\s*[\'\"]([^<\'\"]*)[\'\"]/g;
+		var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|elseif|else|for|set|include|template)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
+		var tagReg = /(<(\/|.)?(var|foreach|block|for|if|elseif|else|set|include|template)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
+		var attributeReg = /([^\s=]+)\s*=\s*(\"([^\"]*?)\"|\'([^\']*?)\')/g;
+		var notEndTag = this.notEndTag;
 		var grade = 0;
 		var variable = {};
 		var depth = 0;
@@ -14,41 +15,33 @@
 		while(result = tagReg.exec(copy)) {
 			var sNode = result[1];
 			var sEnd = result[2] || "";
-			var sName = result[3];
+			var nodeName = result[3];
 			var sAttributes = result[4];
 			var sText = result[5];
 			var aAttributes = {};
 			while(result2 = attributeReg.exec(sAttributes)) {
-				aAttributes[result2[1]] = result2[2];
+				//console.log(result2);
+				aAttributes[result2[1]] = result2[3];
 			}
 	
-			if(sName !== "var" && sName !== "set") {
-				grade += sEnd === "/" ? -1 : 1;
-				
-				//if(sEnd === "/")
-					//variable[grade + 1] = {};
-					
-			}
 				
 			aAttributes["template-data-text"] = sText.replace(" ", ""); 
-			if(grade > depth)
-				depth = grade;
-			
+
 			if(sEnd === "/" ) {
-				if(sName === "var" || sName === "set")
-					text = text.replace(sNode, "");
+				if(notEndTag.indexOf(nodeName) != -1)
+					text = text.replace(sNode +" ", "");
 				else
-					text = text.replace(sNode, "{/" + sName+"}");
+					text = text.replace(sNode +" ", "{/" + nodeName+"}");
 			} else {
 				var sAttribute = "";
-				var sNodeType = sName +"Block";
+				var sNodeType = nodeName +"Block";
 				if(this.tag.sets[sNodeType]) {
 					sAttribute = " " + this.tag.sets[sNodeType](grade, variable, aAttributes);
 				}
-				if(sName === "var" || sName === "set")
-					text = text.replace(result[0], "{"+sName+sAttribute+"}");
+				if(notEndTag.indexOf(nodeName) != -1)
+					text = text.replace(result[0], "{"+nodeName+sAttribute+"}");
 				else
-					text = text.replace(sNode +" ", "{"+sName+sAttribute+"}");
+					text = text.replace(sNode +" ", "{"+nodeName+sAttribute+"}");
 			}
 		}
 		return text;
@@ -71,7 +64,7 @@
 		//name = compile.replaceVariableName(grade, variable, name);
 		return  name;
 	}
-	tagsets.ifBlock = function(grade, variable, attributes) {
+	tagsets.ifBlock = tagsets.elseifBlock = function(grade, variable, attributes) {
 		var cond = attributes["cond"];
 		//cond = compile.replaceVariableName(grade, variable, cond, true);
 		return  cond;
@@ -93,7 +86,7 @@
 	tagsets.includeBlock = function(grade, variable, attributes) {
 		//for i=1 to 4 add 1
 		var name = attributes["name"];
-		var args = attributes["args"] || attributes["template-data-text"];
+		var args = attributes["args"];
 		if(args)
 			return name + " " + args;
 		else
@@ -123,7 +116,7 @@
 	
 			var text;
 			var vars = {};
-			var braceReg = /({(\/|.)?(var|foreach|block|for|if|set|\=|include|template)\s?([\s\S]*?)\})/mg;
+			var braceReg = /({(\/|.)?(var|foreach|block|for|if|elseif|else|set|\=|include|template)\s?([\s\S]*?)\})/mg;
 			
 			code.push("(function(args) {");
 			code.push("args = args || {};");
@@ -134,7 +127,8 @@
 			
 			for(var i = 0; i < length; i += 2) {
 				text = texts[i + 0].replace(/\"/g, "\\\"");
-				code.push("texts.push(\"" + text +"\");");
+				if(text !== "")
+					code.push("texts.push(\"" + text +"\");");
 	
 				if(!texts[i + 1])
 					continue;
@@ -172,7 +166,12 @@
 	
 	};
 	compile.ev = function(codeText) {
-		return dEval(codeText).bind({});
+		try {
+			return dEval(codeText).bind({});
+		} catch(e) {
+			console.error(codeText);
+			throw e;
+		}
 	};
 	var bracesets = compile.brace.sets = {};
 	bracesets.foreachBlock = function(code, attr) {
@@ -215,6 +214,12 @@
 	bracesets.ifBlock = function(code, attr) {
 		code.push("if(" +attr+ ") {");
 	}
+	bracesets.elseifBlock = function(code, attr) {
+		code.push("} else if(" +attr+ ") {");
+	}
+	bracesets.elseBlock = function(code, attr) {
+		code.push("} else {");
+	}	
 	bracesets.varBlock = function(code, attr) {
 		code.push("texts.push(" + attr + ");");
 	}
@@ -308,8 +313,9 @@
 	};
 	daylight.$TemplateEngine = function TemplateEngine(html) {
 		this.html = html;
+		this._html = html;
 	}
-	daylight.$TemplateEngine.prototype.compileTag = function(info) {
+	daylight.$TemplateEngine.prototype.compileTag = function() {
 		this.html = compile.tag(this.html);
 	}
 	daylight.$TemplateEngine.prototype.compile = function() {
@@ -334,6 +340,37 @@
 	daylight.fn.extend({
 		templateEngine: function(info, html) {
 			this.html(daylight.templateEngine(info, html));
+			return this;
+		},
+		setTemplateEngine: function(_templateEngine) {
+			this._templateEngine = _templateEngine;
+			return this;
+		},
+		compile: function(html) {
+			html = html || this.html();
+			var _templateEngine = this._templateEngine;
+			if(!_templateEngine) {
+				_templateEngine = this._templateEngine = new daylight.$TemplateEngine(html);
+				_templateEngine.compileTag();
+				_tamplateEngine.compile();
+			} else {
+				if(_templateEngine._html !== html) {
+					_templateEngine.html = _templateEngine._html = html;
+					_templateEngine.compileTag();
+					_tamplateEngine.compile();
+				}
+			}
+			return this;
+		},
+		process: function(info, html) {
+
+			var _templateEngine = this._templateEngine;
+			if(!_templateEngine) {
+				_templateEngine = this._templateEngine = new daylight.$TemplateEngine(this.html());
+				_templateEngine.compileTag();
+			}
+			this.html(_templateEngine.process(info));
+			
 			return this;
 		}
 	});

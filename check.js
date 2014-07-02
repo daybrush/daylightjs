@@ -93,6 +93,9 @@ daylight.extend({
 	*/
 	isList: function(obj) {
 		var type = daylight.type(obj);
+		return this.isListType(type);
+	},
+	isListType: function(type) {
 		return type === "array" || type === "nodelist" || type === "elementlist" || type === "htmlcollection";
 	},
 	isDaylight: function(obj) {
@@ -107,7 +110,8 @@ daylight.extend({
 			return true;
 		if(type === "elementlist")
 			return true;
-			
+		if(type === "htmlcollection")
+			return true;
 		return false;
 	}
 });
