@@ -27,6 +27,9 @@ prototype.extend({
 		
 		return this[index];
 	},
+	eq: function(index) {
+		return daylight(this.get(index));
+	},
 	getOriginal: function() {
 		var type = daylight.type(this);
 		if(type === "nodelist")

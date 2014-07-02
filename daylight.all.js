@@ -598,6 +598,9 @@ prototype.extend({
 		
 		return this[index];
 	},
+	eq: function(index) {
+		return daylight(this.get(index));
+	},
 	getOriginal: function() {
 		var type = daylight.type(this);
 		if(type === "nodelist")
@@ -2729,7 +2732,7 @@ daylight.fn.extend =  function() {
 				aAttributes[result2[1]] = result2[3];
 			}
 	
-				
+			//inner HTML
 			aAttributes["template-data-text"] = sText.replace(" ", ""); 
 
 			if(sEnd === "/" ) {
@@ -3446,7 +3449,7 @@ daylight.fn.extend =  function() {
 			self.setInfo(e);
 			//console.log("DRAGGABLE dragstart", e);
 			if(self._dragstart)
-				self._dragstart.call(this, e);
+				self._dragstart.call(this, e,  self._dataTransfer.data);
 	
 		}
 		var mousemove = function(e) {

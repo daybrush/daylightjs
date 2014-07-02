@@ -55,7 +55,7 @@
 			self.setInfo(e);
 			//console.log("DRAGGABLE dragstart", e);
 			if(self._dragstart)
-				self._dragstart.call(this, e);
+				self._dragstart.call(this, e,  self._dataTransfer.data);
 	
 		}
 		var mousemove = function(e) {
