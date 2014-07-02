@@ -24,7 +24,7 @@
 				aAttributes[result2[1]] = result2[3];
 			}
 	
-				
+			//inner HTML
 			aAttributes["template-data-text"] = sText.replace(" ", ""); 
 
 			if(sEnd === "/" ) {
