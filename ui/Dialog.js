@@ -1,0 +1,3 @@
+var Dialog = function(element) {
+	
+}

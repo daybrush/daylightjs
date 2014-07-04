@@ -2,10 +2,10 @@
 	var template = daylight.template;
 	var dEval = window.eval;
 	var compile = {};
-	compile.notEndTag = ["var", "set", "include"];
+	compile.notEndTag = ["var", "set", "include", "js"];
 	compile.tag = function(text) {
-		var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|elseif|else|for|set|include|template)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
-		var tagReg = /(<(\/|.)?(var|foreach|block|for|if|elseif|else|set|include|template)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
+		var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|elseif|else|for|set|include|template|js)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
+		var tagReg = /(<(\/|.)?(var|foreach|block|for|if|elseif|else|set|include|template|js)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
 		var attributeReg = /([^\s=]+)\s*=\s*(\"([^\"]*?)\"|\'([^\']*?)\')/g;
 		var notEndTag = this.notEndTag;
 		var grade = 0;
@@ -69,6 +69,10 @@
 		//cond = compile.replaceVariableName(grade, variable, cond, true);
 		return  cond;
 	}
+	tagsets.jsBlock = function(grade, variable, attributes) {
+		//cond = compile.replaceVariableName(grade, variable, cond, true);
+		return attributes["template-data-text"];
+	}
 	tagsets.forBlock = function(grade, variable, attributes) {
 		//for i=1 to 4 add 1
 		var name = attributes["var"];
@@ -116,7 +120,7 @@
 	
 			var text;
 			var vars = {};
-			var braceReg = /({(\/|.)?(var|foreach|block|for|if|elseif|else|set|\=|include|template)\s?([\s\S]*?)\})/mg;
+			var braceReg = /({(\/|.)?(var|foreach|block|for|if|elseif|else|set|\=|include|template|js)\s?([\s\S]*?)\})/mg;
 			
 			code.push("(function(args) {");
 			code.push("args = args || {};");
@@ -213,6 +217,9 @@
 	}
 	bracesets.ifBlock = function(code, attr) {
 		code.push("if(" +attr+ ") {");
+	}
+	bracesets.jsBlock = function(code, attr) {
+		code.push(attr);
 	}
 	bracesets.elseifBlock = function(code, attr) {
 		code.push("} else if(" +attr+ ") {");
@@ -327,9 +334,10 @@
 		
 		var result = "";
 		try {
+			//info._obj = function() {return {};};
 			result = this.func(info);
 		} catch(e) {
-			//console.log(this.html);
+			console.log(this.html);
 			throw e;
 		}
 		

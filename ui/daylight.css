@@ -666,9 +666,15 @@ body {
 }
 
 .day-text-editable .day-textedit {
+	position: relative;
 	width: 100%;
 	height: 100%;
 	text-align: inherit;
+	font-size: inherit;
+	color: inherit;
+	line-height: inherit;
+	display: block;
+	background: inherit;
 }
 .day-text-editable {
 	position: relative;
@@ -680,6 +686,8 @@ body {
 	top:50%;
 	height: 10px;
 	line-height: 0px;
+	font-size: 14px;
+	z-index: 20;
 }
 .day-text-editable.day-mode-edit:hover:after {
 	color:#000;

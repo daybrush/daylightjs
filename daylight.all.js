@@ -1103,10 +1103,11 @@ daylight.extend({
 		var length = arr.length;
 		var afterClassName = "";
 
+		var classNames = className.split(" ");
 		
 		for(var i = 0; i < length; ++i) {
 			var eClass = arr[i];
-			if(eClass === className)
+			if(classNames.indexOf(eClass) != -1)
 				continue;
 			afterClassName += afterClassName ? " " + eClass : eClass
 		}
@@ -2245,6 +2246,27 @@ prototype.extend({
 		};
 	}
 });
+daylight.each(["Top", "Left"], function(name) {
+	var funcName = "scroll" + name;
+	prototype[funcName] = function(value) {
+		if(typeof value !== "undefined") {
+			this.each(function(e) {
+				
+				e[funcName] = value;
+				if(e === document.body) {
+					docElem[funcName] = value;
+				}
+			});
+			return this;
+		} else {
+			if(!daylight.isElement(this.get(0)))
+				return;
+				
+			return this.get(0)[funcName] || docElem[funcName];
+		}
+	}
+});
+
 
 
 
@@ -2325,7 +2347,7 @@ prototype.extend({
 				return this;
 			}
 		}
-		_addDomEach(this,obje, function(target, element) {
+		_addDomEach(this,obj, function(target, element) {
 			if(daylight.isElement(target) && target.parentNode)
 				target.parentNode.insertBefore(element, target);
 		});
@@ -2710,10 +2732,10 @@ daylight.fn.extend =  function() {
 	var template = daylight.template;
 	var dEval = window.eval;
 	var compile = {};
-	compile.notEndTag = ["var", "set", "include"];
+	compile.notEndTag = ["var", "set", "include", "js"];
 	compile.tag = function(text) {
-		var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|elseif|else|for|set|include|template)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
-		var tagReg = /(<(\/|.)?(var|foreach|block|for|if|elseif|else|set|include|template)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
+		var copy = text =  text.replace(/(<(\/|.)?(var|foreach|block|if|elseif|else|for|set|include|template|js)(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*>)/g, "$1 ");
+		var tagReg = /(<(\/|.)?(var|foreach|block|for|if|elseif|else|set|include|template|js)((?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])*)>)((.|\n|\r)[^\<]*)/g;
 		var attributeReg = /([^\s=]+)\s*=\s*(\"([^\"]*?)\"|\'([^\']*?)\')/g;
 		var notEndTag = this.notEndTag;
 		var grade = 0;
@@ -2777,6 +2799,10 @@ daylight.fn.extend =  function() {
 		//cond = compile.replaceVariableName(grade, variable, cond, true);
 		return  cond;
 	}
+	tagsets.jsBlock = function(grade, variable, attributes) {
+		//cond = compile.replaceVariableName(grade, variable, cond, true);
+		return attributes["template-data-text"];
+	}
 	tagsets.forBlock = function(grade, variable, attributes) {
 		//for i=1 to 4 add 1
 		var name = attributes["var"];
@@ -2824,7 +2850,7 @@ daylight.fn.extend =  function() {
 	
 			var text;
 			var vars = {};
-			var braceReg = /({(\/|.)?(var|foreach|block|for|if|elseif|else|set|\=|include|template)\s?([\s\S]*?)\})/mg;
+			var braceReg = /({(\/|.)?(var|foreach|block|for|if|elseif|else|set|\=|include|template|js)\s?([\s\S]*?)\})/mg;
 			
 			code.push("(function(args) {");
 			code.push("args = args || {};");
@@ -2921,6 +2947,9 @@ daylight.fn.extend =  function() {
 	}
 	bracesets.ifBlock = function(code, attr) {
 		code.push("if(" +attr+ ") {");
+	}
+	bracesets.jsBlock = function(code, attr) {
+		code.push(attr);
 	}
 	bracesets.elseifBlock = function(code, attr) {
 		code.push("} else if(" +attr+ ") {");
@@ -3035,9 +3064,10 @@ daylight.fn.extend =  function() {
 		
 		var result = "";
 		try {
+			//info._obj = function() {return {};};
 			result = this.func(info);
 		} catch(e) {
-			//console.log(this.html);
+			console.log(this.html);
 			throw e;
 		}
 		
@@ -3411,8 +3441,8 @@ daylight.fn.extend =  function() {
 		this.object = object;
 		this._dataTransfer = {
 			data: {},
-			dragInfo: {x:0, y:0, is_append: false, ghostElement: null},
-			setDragElement: function(element, x, y) {
+			dragInfo: {x:0, y:0, is_append: false, ghostElement: null, appendTarget: null},
+			setDragElement: function(element, x, y, target) {
 				var dragInfo = this.dragInfo;
 				dragInfo.ghostElement = element.cloneNode(true);
 				dragInfo.x = x || 0;
@@ -3421,9 +3451,10 @@ daylight.fn.extend =  function() {
 				dragInfo.ghostElement.style.cssText += "position:fixed;opacity:0.5;-webkit-opacity:0.5;-moz-opacity:0.5;z-index:20;";
 				dragInfo.ghostElement.className += " day-ghost-image";
 				dragInfo.is_append = false;
+				dragInfo.appendTarget = target;
 			},
-			setDragImage: function(element, x, y) {
-				this.setDragElement(element, x, y);	
+			setDragImage: function(element, x, y, target) {
+				this.setDragElement(element, x, y, target);	
 			},
 			setData: function(name, value) {
 				this.data[name] = value;
@@ -3447,7 +3478,7 @@ daylight.fn.extend =  function() {
 			self._is_drag = true;
 			
 			self.setInfo(e);
-			//console.log("DRAGGABLE dragstart", e);
+
 			if(self._dragstart)
 				self._dragstart.call(this, e,  self._dataTransfer.data);
 	
@@ -3471,14 +3502,17 @@ daylight.fn.extend =  function() {
 				var ghostElementY = position[pos.y] + dragInfo.y;
 				if(!dragInfo.is_append) {
 					dragInfo.is_append = true;
-					self._dragElement.appendChild(ghostElement);
-					//console.log("append");
+					if(dragInfo.appendTarget)
+						dragInfo.appendTarget.appendChild(ghostElement);
+					else
+						daylight(self._dragElement).after(ghostElement);
 				}
 				ghostElement.style.cssText += "left:" + ghostElementX +"px;top:"+ghostElementY+"px;";
 			}
 			self.setInfo(e);
+
 			if(self._drag)
-				self._drag.call(this, e,  self._dataTransfer.data);	
+				self._drag.call(this, e,  self._dataTransfer.data);
 		}
 		var mouseup = function(e) {
 			if(!self._is_drag)
@@ -3488,20 +3522,25 @@ daylight.fn.extend =  function() {
 			var ghostElement = dragInfo.ghostElement;
 			if(ghostElement) {
 				if(dragInfo.is_append) {
-					self._dragElement.removeChild(ghostElement);
+					if(dragInfo.appendTarget)
+						dragInfo.appendTarget.removeChild(ghostElement);
+					else
+						daylight(ghostElement).remove();
 				}
 				dragInfo.ghostElement = null;
 			}
 			self.setInfo(e);
-
-			if(self._dragend)
-				self._dragend.call(this, e, self._dataTransfer.data);
-				
+			
 			self._is_drag = false;		
 			self._dragElement = null;
 			self._dragDistance = null
 			self._dragElement = null;
 			
+			
+			if(self._dragend)
+				self._dragend.call(this, e, self._dataTransfer.data);
+
+			dragInfo.data = null;
 		}
 		var mouseleave = function(e) {
 			if(!self._is_drag)
@@ -3560,7 +3599,7 @@ daylight.fn.extend =  function() {
 	}
 	Draggable.prototype.dragInit = function() {
 		this._dataTransfer.data = {};
-		this._dataTransfer.dragInfo = {x:0, y:0, is_append: false, ghostElement: null};
+		this._dataTransfer.dragInfo = {x:0, y:0, is_append: false, ghostElement: null, appendTarget: null};
 	}
 	Draggable.prototype.dragstart = function(func) {
 		this._dragstart = func;

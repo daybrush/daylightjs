@@ -74,7 +74,7 @@ prototype.extend({
 				return this;
 			}
 		}
-		_addDomEach(this,obje, function(target, element) {
+		_addDomEach(this,obj, function(target, element) {
 			if(daylight.isElement(target) && target.parentNode)
 				target.parentNode.insertBefore(element, target);
 		});

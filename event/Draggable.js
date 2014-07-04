@@ -17,8 +17,8 @@
 		this.object = object;
 		this._dataTransfer = {
 			data: {},
-			dragInfo: {x:0, y:0, is_append: false, ghostElement: null},
-			setDragElement: function(element, x, y) {
+			dragInfo: {x:0, y:0, is_append: false, ghostElement: null, appendTarget: null},
+			setDragElement: function(element, x, y, target) {
 				var dragInfo = this.dragInfo;
 				dragInfo.ghostElement = element.cloneNode(true);
 				dragInfo.x = x || 0;
@@ -27,9 +27,10 @@
 				dragInfo.ghostElement.style.cssText += "position:fixed;opacity:0.5;-webkit-opacity:0.5;-moz-opacity:0.5;z-index:20;";
 				dragInfo.ghostElement.className += " day-ghost-image";
 				dragInfo.is_append = false;
+				dragInfo.appendTarget = target;
 			},
-			setDragImage: function(element, x, y) {
-				this.setDragElement(element, x, y);	
+			setDragImage: function(element, x, y, target) {
+				this.setDragElement(element, x, y, target);	
 			},
 			setData: function(name, value) {
 				this.data[name] = value;
@@ -53,7 +54,7 @@
 			self._is_drag = true;
 			
 			self.setInfo(e);
-			//console.log("DRAGGABLE dragstart", e);
+
 			if(self._dragstart)
 				self._dragstart.call(this, e,  self._dataTransfer.data);
 	
@@ -77,14 +78,17 @@
 				var ghostElementY = position[pos.y] + dragInfo.y;
 				if(!dragInfo.is_append) {
 					dragInfo.is_append = true;
-					self._dragElement.appendChild(ghostElement);
-					//console.log("append");
+					if(dragInfo.appendTarget)
+						dragInfo.appendTarget.appendChild(ghostElement);
+					else
+						daylight(self._dragElement).after(ghostElement);
 				}
 				ghostElement.style.cssText += "left:" + ghostElementX +"px;top:"+ghostElementY+"px;";
 			}
 			self.setInfo(e);
+
 			if(self._drag)
-				self._drag.call(this, e,  self._dataTransfer.data);	
+				self._drag.call(this, e,  self._dataTransfer.data);
 		}
 		var mouseup = function(e) {
 			if(!self._is_drag)
@@ -94,20 +98,25 @@
 			var ghostElement = dragInfo.ghostElement;
 			if(ghostElement) {
 				if(dragInfo.is_append) {
-					self._dragElement.removeChild(ghostElement);
+					if(dragInfo.appendTarget)
+						dragInfo.appendTarget.removeChild(ghostElement);
+					else
+						daylight(ghostElement).remove();
 				}
 				dragInfo.ghostElement = null;
 			}
 			self.setInfo(e);
-
-			if(self._dragend)
-				self._dragend.call(this, e, self._dataTransfer.data);
-				
+			
 			self._is_drag = false;		
 			self._dragElement = null;
 			self._dragDistance = null
 			self._dragElement = null;
 			
+			
+			if(self._dragend)
+				self._dragend.call(this, e, self._dataTransfer.data);
+
+			dragInfo.data = null;
 		}
 		var mouseleave = function(e) {
 			if(!self._is_drag)
@@ -166,7 +175,7 @@
 	}
 	Draggable.prototype.dragInit = function() {
 		this._dataTransfer.data = {};
-		this._dataTransfer.dragInfo = {x:0, y:0, is_append: false, ghostElement: null};
+		this._dataTransfer.dragInfo = {x:0, y:0, is_append: false, ghostElement: null, appendTarget: null};
 	}
 	Draggable.prototype.dragstart = function(func) {
 		this._dragstart = func;

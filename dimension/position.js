@@ -57,3 +57,24 @@ prototype.extend({
 		};
 	}
 });
+daylight.each(["Top", "Left"], function(name) {
+	var funcName = "scroll" + name;
+	prototype[funcName] = function(value) {
+		if(typeof value !== "undefined") {
+			this.each(function(e) {
+				
+				e[funcName] = value;
+				if(e === document.body) {
+					docElem[funcName] = value;
+				}
+			});
+			return this;
+		} else {
+			if(!daylight.isElement(this.get(0)))
+				return;
+				
+			return this.get(0)[funcName] || docElem[funcName];
+		}
+	}
+});
+

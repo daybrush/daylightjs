@@ -16,10 +16,11 @@ daylight.extend({
 		var length = arr.length;
 		var afterClassName = "";
 
+		var classNames = className.split(" ");
 		
 		for(var i = 0; i < length; ++i) {
 			var eClass = arr[i];
-			if(eClass === className)
+			if(classNames.indexOf(eClass) != -1)
 				continue;
 			afterClassName += afterClassName ? " " + eClass : eClass
 		}
