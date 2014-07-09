@@ -14,7 +14,8 @@ var hasOwn = class2type.hasOwnProperty;
 var navigator = window.navigator || navigator;
 var userAgent = navigator.userAgent;
 var _Element = window.HTMLElement || window.Element;
-
+var _arr = [];
+var _push = _arr.push;
 
 
 var sObject = "object", sDaylight = "daylight", sString = "string", sArray = "array", sNodeList = "nodelist", sElementList = "elementlist";
@@ -70,10 +71,10 @@ var ElementList = function ElementList(arr) {
 	this.length = length;
 };
 var ElementListPrototype = ElementList.prototype = [];
-ElementListPrototype.push = ElementListPrototype.add = function(e) {
-	var length = this.length;
-	this[length++] = e;
-	this.length = length;
+ElementListPrototype.push = ElementListPrototype.add = function(o) {
+	if(!daylight.isList(o))
+		o = [o];
+	_push.apply(this, o);
 
 	return this;
 }
@@ -190,7 +191,8 @@ daylight.extend({
 
 
 //event
-//@{event/event.js}
+	
+//@{event/events.js}
 
 //dimension
 //@{dimension/dimension.js}

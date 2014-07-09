@@ -34,6 +34,12 @@ body {
 .navbar-brand {
 	
 }
+.navbar-left {
+	float: left;
+}
+.navbar-right {
+	float: right;
+}
 .navbar-toggle {
 /* 	position: absolute; */
 	float:right;
@@ -116,6 +122,33 @@ body {
 	border-radius: 4px;
 }
 
+[role="modal"] {
+	display: none;
+}
+[role="modal"].show {
+	display: block;
+}
+.modal-black-screen {
+	position: fixed;
+	overflow: auto;
+	width: 100%;
+	height: 100%;
+	background: rgb(50, 50, 50);
+	background: rgba(0, 0, 0, 0.4);
+	z-index: 10;
+	top:0;
+	left:0;
+}
+
+.modal-dialog {
+	position:relative;
+	margin: 30px auto;
+}
+
+/*animation*/
+.fade {
+	
+}
 .day_checkbox, .day_radio {
 	margin:5px;
 	display: inline-block;

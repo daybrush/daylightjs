@@ -1,7 +1,7 @@
 prototype.extend({
 	index: function(object) {
 		var type = daylight.type(object);
-		if(type === sDaylight)
+		if(daylight.isDaylightType(type))
 			object = object.get(0);
 		
 		var length = this.length;

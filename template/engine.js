@@ -19,9 +19,10 @@
 			var sAttributes = result[4];
 			var sText = result[5];
 			var aAttributes = {};
+
 			while(result2 = attributeReg.exec(sAttributes)) {
 				//console.log(result2);
-				aAttributes[result2[1]] = result2[3];
+				aAttributes[result2[1]] = typeof result2[3] !== "undefined" ? result2[3] : result2[4];
 			}
 	
 			//inner HTML
@@ -324,9 +325,13 @@
 	}
 	daylight.$TemplateEngine.prototype.compileTag = function() {
 		this.html = compile.tag(this.html);
+		
+		return this;
 	}
 	daylight.$TemplateEngine.prototype.compile = function() {
 		this.func = compile.brace(this.html);
+		
+		return this;
 	}
 	daylight.$TemplateEngine.prototype.process = function(info) {
 		if(!this.func)

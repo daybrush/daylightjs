@@ -147,13 +147,41 @@ daylight.ui.textedit.complete = function(dlTarget) {
 	daylight.ui.textedit.setText(dlTarget, val);
 	daylight.trigger(document, "editComplete", {editTarget: dlTarget, completeText: val, oldText: oldVal});
 }
+daylight.ui.textedit.completeAll = function() {
+	var self = this;
+	daylight(".day-text-editable.day-mode-edit").each(function() {
+		self.complete(daylight(this));
+	})
+}
+daylight.ui.textedit.cancelAll = function() {
+	
+}
 daylight.ui.textedit.cancel = function(dlTarget) {
 	dlTarget.removeClass("day-mode-edit");
 	var dlTextEdit = dlTarget.find(".day-textedit");
 	var oldVal = dlTarget.attr("data-text");
 	daylight.ui.textedit.setText(dlTarget, oldVal);
 }
+daylight.ui.textedit.edit = function(target) {
+
+	var dlTarget = $(target);
+	if(!dlTarget.hasClass("day-text-editable"))
+		return;
+		
+	if(dlTarget.hasClass("day-mode-edit"))
+		return;
+	dlTarget.addClass("day-mode-edit");
+	if(dlTarget.attr("data-text") === null)
+		dlTarget.attr("data-text", dlTarget.html());
+		
+	var sDefaultPrefix = dlTarget.attr("data-prefix") || "";
+	dlTarget.html(sDefaultPrefix + '<input type="text" class="day-textedit" value="'+(dlTarget.attr("data-text") || "")+'"/>');
+	//dlTarget.html('<textarea class="day-textedit'>+(dlTarget.attr("data-text") || "")+'"</textarea>');
+	dlTarget.find(".day-textedit").get(0).focus();
+
+}
 daylight.ui.textedit.event = function() {
+	var self = this;
 	$("body").click(function(e) {
 		if(!daylight.hasClass(e.target, "day-text-editable"))
 			return;
@@ -167,15 +195,7 @@ daylight.ui.textedit.event = function() {
 		if(!daylight.hasClass(e.target, "day-text-editable"))
 			return;
 		
-		var dlTarget = $(e.target);
-		dlTarget.addClass("day-mode-edit");
-		if(dlTarget.attr("data-text") === null)
-			dlTarget.attr("data-text", dlTarget.html());
-			
-		var sDefaultPrefix = dlTarget.attr("data-prefix") || "";
-		dlTarget.html(sDefaultPrefix + '<input type="text" class="day-textedit" value="'+(dlTarget.attr("data-text") || "")+'"/>');
-		//dlTarget.html('<textarea class="day-textedit'>+(dlTarget.attr("data-text") || "")+'"</textarea>');
-		dlTarget.find(".day-textedit").get(0).focus();
+		self.edit(e.target);
 	});
 	$("body").keyup(function(e) {
 		if(!daylight.hasClass(e.target, "day-textedit"))
@@ -188,7 +208,14 @@ daylight.ui.textedit.event = function() {
 			daylight.ui.textedit.cancel($(e.target).parent());			
 		}
 	});
-	$(document).on("editCancel", function(e) {
+	$("body").on("textedit", function(e) {
+		console.log("edit");
+		self.edit(e.editTarget);
+	});
+	$("body").on("completeAll", function(e) {
+		self.completeAll();
+	});
+ 	$(document).on("editCancel", function(e) {
 		
 	});
 }
@@ -243,14 +270,30 @@ $(document).ready(function() {
 			daylight.UI.resize.dragend(e, data);
 	});
 	//for daylight.css
-	$(".navbar-toggle").click(function(e) {
-		var dlElement = daylight(this);
+	$("[data-toggle]").click(function(e) {
+		var dlElement = daylight(e.target);
 
 		var selector = dlElement.attr("data-target");
 		if(!selector)
 			return;
-			
-		daylight(selector).toggleClass("collapse");
+		var toggle = dlElement.attr("data-toggle");
+		if(!toggle)
+			return;	
+		daylight(selector).toggleClass(toggle);
+		return;
+	});
+	$("[role=\"modal\"]").click(function(e) {
+		var target = e.target || e.srcElement;
+		var dlModal = $(this);
+		if(target.getAttribute("data-close") != null) {
+			dlModal.removeClass("show");
+		}
+		var dlElement = daylight(this);
+		var selector = dlElement.attr("data-target");
+		if(!selector)
+			return;
+		var toggle = dlElement.attr("data-toggle");		
+		daylight(selector).toggleClass(toggle);
 		return;
 	});
 	daylight.ui.textedit.event();

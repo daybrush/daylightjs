@@ -1,0 +1,3 @@
+var Editable = function() {
+	
+}

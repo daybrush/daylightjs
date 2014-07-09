@@ -24,10 +24,12 @@
 			//보내기
 			send : function(ajax) {
 				var request = ajax.target;
-				if(typeof ajax.param === "string" &&  ajax.param != "") {
+				if(ajax.option.method === "POST" && typeof ajax.param === "string" &&  ajax.param !== "") {
 					var length = ajax.param.split("&").length;
 					request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-					request.setRequestHeader("Content-length", ajax.param.length);
+					//console.log(ajax.param.length);
+					//request.setRequestHeader("Content-Length", ajax.param.length);
+				} else {
 				}
 				request.send(ajax.param);
 			},
@@ -165,6 +167,7 @@
 				this.func[k] === undefined? this.option[k] = option[k]: this.func[k] = option[k];
 			}
 		}
+		this.option.method = this.option.method.toUpperCase(); 
 		option = this.option;
 		
 		var type = option.type === "jsonp"? "script" : "ajax";//|| option.type==="script" 

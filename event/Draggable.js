@@ -23,7 +23,6 @@
 				dragInfo.ghostElement = element.cloneNode(true);
 				dragInfo.x = x || 0;
 				dragInfo.y = y || 0;
-			
 				dragInfo.ghostElement.style.cssText += "position:fixed;opacity:0.5;-webkit-opacity:0.5;-moz-opacity:0.5;z-index:20;";
 				dragInfo.ghostElement.className += " day-ghost-image";
 				dragInfo.is_append = false;
@@ -151,7 +150,12 @@
 		object.on("mouseout", mouseout);		
 		
 		object.on("dragcancel", function(e) {
-			mouseup.call(this, e);
+			console.log("dragcancel");
+			self._is_drag = false;
+			self._dragElement = null;
+			self._dragDistance = null
+			self._dragElement = null;
+			self._dataTransfer.dragInfo.data = null;
 		});
 		
 		

@@ -105,6 +105,11 @@ eventPrototype.key = function() {
 	else if(ret.space)
 		ret.character = "space";
 		
+	switch(keyCode) {
+	case 187: ret.character = "=";break;
+	case 189: ret.character = "-";break;
+	case 222: ret.character = "'";break;
+	}
 	return ret;
 };
 
@@ -122,41 +127,3 @@ daylight.$E = {
 		
 	}
 }
-
-
-
-"scroll load dblclick click mousedown mouseover mousemove mouseup mouseleave focus keydown keypress keyup select selectstart resize".split(" ").forEach(function(name, index, arr) {
-	if(typeof name !== "string")
-		return;
-		
-	prototype[name] = function(func) {
-		this.on(name, func);
-		return this;
-	}
-});
-	
-//@{trigger.js}
-//@{on.js}
-//@{drag.js}
-//@{visible.js}
-
-prototype.extend({
-	wheel: function(func) {
-		this.on("DOMMouseScroll", func);
-		this.on("mousewheel", func);
-	},
-	ready: function(func) {
-		function listener(e) {
-			if (e && e.readyState  || this.readyState === "interactive") {
-				func.call(this, e);
-			}
-		};
-		this.each(function() {
-			if(this.readyState === "interactive" || this.readyState === "complete")
-				listener({readyState : "interactive"});
-		});
-		
-		this.on("readystatechange", listener);
-
-	}
-});
