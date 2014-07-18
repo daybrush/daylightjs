@@ -6,8 +6,8 @@ var document = window.document || document;
 var docElem = document.documentElement;
 
 var NodeListPrototype = document.childNodes.__proto__;
-var HTMLCollectionPrototype = docElem.children && docElem.children.__proto__;
-var prototype = {};
+var HTMLCollectionPrototype = docElem.children && docElem.children.__proto__ || {};
+var prototype = [];
 var class2type = {};
 var toString = class2type.toString;
 var hasOwn = class2type.hasOwnProperty;
@@ -70,7 +70,7 @@ var ElementList = function ElementList(arr) {
 	}
 	this.length = length;
 };
-var ElementListPrototype = ElementList.prototype = [];
+var ElementListPrototype = NodeListPrototype.__proto__ = HTMLCollectionPrototype.__proto__ = ElementList.prototype = prototype;
 ElementListPrototype.push = ElementListPrototype.add = function(o) {
 	if(!daylight.isList(o))
 		o = [o];
@@ -80,7 +80,7 @@ ElementListPrototype.push = ElementListPrototype.add = function(o) {
 }
 ElementListPrototype.elementlist = sElementList;
 
-NodeListPrototype.push = NodeListPrototype.add = function(e) {
+HTMLCollectionPrototype.push = HTMLCollectionPrototype.add = NodeListPrototype.push = NodeListPrototype.add = function(e) {
 	var a = new ElementList(this);
 	a.add(e);
 	return a;
@@ -147,7 +147,8 @@ daylight.extend({
 	}
 });
 
-
+//data
+//@{data.js}
 
 //array
 //@{array.js}

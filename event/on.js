@@ -1,4 +1,4 @@
-prototype.on = function(key, func, type) {
+prototype.bind = prototype.on = function(key, func, type) {
 	if(func) {
 		this.each(function(ele) {
 			if(ele.addEventListener){

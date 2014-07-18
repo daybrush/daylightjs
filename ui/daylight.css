@@ -708,6 +708,7 @@ body {
 	line-height: inherit;
 	display: block;
 	background: inherit;
+	font-family: inherit;
 }
 .day-text-editable {
 	position: relative;

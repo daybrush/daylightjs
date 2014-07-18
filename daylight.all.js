@@ -94,8 +94,8 @@ var document = window.document || document;
 var docElem = document.documentElement;
 
 var NodeListPrototype = document.childNodes.__proto__;
-var HTMLCollectionPrototype = docElem.children && docElem.children.__proto__;
-var prototype = {};
+var HTMLCollectionPrototype = docElem.children && docElem.children.__proto__ || {};
+var prototype = [];
 var class2type = {};
 var toString = class2type.toString;
 var hasOwn = class2type.hasOwnProperty;
@@ -158,7 +158,7 @@ var ElementList = function ElementList(arr) {
 	}
 	this.length = length;
 };
-var ElementListPrototype = ElementList.prototype = [];
+var ElementListPrototype = NodeListPrototype.__proto__ = HTMLCollectionPrototype.__proto__ = ElementList.prototype = prototype;
 ElementListPrototype.push = ElementListPrototype.add = function(o) {
 	if(!daylight.isList(o))
 		o = [o];
@@ -168,7 +168,7 @@ ElementListPrototype.push = ElementListPrototype.add = function(o) {
 }
 ElementListPrototype.elementlist = sElementList;
 
-NodeListPrototype.push = NodeListPrototype.add = function(e) {
+HTMLCollectionPrototype.push = HTMLCollectionPrototype.add = NodeListPrototype.push = NodeListPrototype.add = function(e) {
 	var a = new ElementList(this);
 	a.add(e);
 	return a;
@@ -235,7 +235,103 @@ daylight.extend({
 	}
 });
 
+//data
+/*
+ * reference to daylight data
+ */
+var expando = "daylight" + Date.now(), uuid = 0, windowData = {};
 
+daylight.extend({
+	cache: {},
+
+	data: function( elem, name, data ) {
+		elem = elem == window ?
+			windowData :
+			elem;
+
+		var id = elem[ expando ];
+
+		// Compute a unique ID for the element
+		if ( !id )
+			id = elem[ expando ] = ++uuid;
+
+		// Only generate the data cache if we're
+		// trying to access or manipulate it
+		if ( name && !daylight.cache[ id ] )
+			daylight.cache[ id ] = {};
+
+		// Prevent overriding the named cache with undefined values
+		if ( data !== undefined )
+			daylight.cache[ id ][ name ] = data;
+
+		// Return the named cache data, or the ID for the element
+		return name ?
+			daylight.cache[ id ][ name ] :
+			id;
+	},
+
+	removeData: function( elem, name ) {
+		elem = elem == window ?
+			windowData :
+			elem;
+
+		var id = elem[ expando ];
+
+		// If we want to remove a specific section of the element's data
+		if ( name ) {
+			if ( daylight.cache[ id ] ) {
+				// Remove the section of cache data
+				delete daylight.cache[ id ][ name ];
+
+				// If we've removed all the data, remove the element's cache
+				name = "";
+
+				for ( name in daylight.cache[ id ] )
+					break;
+
+				if ( !name )
+					daylight.removeData( elem );
+			}
+
+		// Otherwise, we want to remove all of the element's data
+		} else {
+			// Clean up the element expando
+			try {
+				delete elem[ expando ];
+			} catch(e){
+				// IE has trouble directly removing the expando
+				// but it's ok with using removeAttribute
+				if ( elem.removeAttribute )
+					elem.removeAttribute( expando );
+			}
+
+			// Completely remove the data cache
+			delete daylight.cache[ id ];
+		}
+	}
+});
+
+prototype.extend({
+	data: function( key, value ){
+		var parts = key.split(".");
+		parts[1] = parts[1] ? "." + parts[1] : "";
+
+		if ( value === undefined ) {
+			data = daylight.data( this[0], key );
+			return data;
+			
+		} else
+			return this.each(function(){
+				daylight.data( this, key, value );
+			});
+	},
+
+	removeData: function( key ){
+		return this.each(function(){
+			daylight.removeData( this, key );
+		});
+	}
+});
 
 //array
 daylight.extend({
@@ -1242,11 +1338,12 @@ var _curCss = function(element, name, pre_styles) {
 	//element에 대해 미리 정의한 style들의 모음.
 	name = daylight.camelCase(name);
 	
-	var style = pre_styles && pre_styles[name] || _style(element, name) || 0;
+	var style = pre_styles && pre_styles[name] || _style(element, name) || "";
 
 
 	//한 스타일 속성  style.length - 1 = 문자 끝자리가 %
-	if(style && style.length && style[style.length - 1] === "%") {
+	
+	if(style && style.match(/^(\-?[0-9\.]+)\%$/) != null) {
 		var percentage = parseFloat(style);
 	
 		//false Nan까지 고려
@@ -1490,7 +1587,7 @@ prototype.trigger = function(key, extra) {
 	});
 	return this;	
 };
-prototype.on = function(key, func, type) {
+prototype.bind = prototype.on = function(key, func, type) {
 	if(func) {
 		this.each(function(ele) {
 			if(ele.addEventListener){
@@ -2712,10 +2809,6 @@ prototype.extend({
 	isEmpty: prototype.empty,
 	forEach: prototype.each
 });
-daylight.extend(true, NodeListPrototype, prototype);
-daylight.extend(true, ElementListPrototype, prototype);
-if(HTMLCollectionPrototype)
-	daylight.extend(true, HTMLCollectionPrototype, prototype);
 
 
 daylight.fn = prototype;
@@ -2727,14 +2820,7 @@ daylight.fn.extend =  function() {
 	for(; i < length; ++i) {
 		object = arguments[i];
 		for(var key in object) {
-			if(!NodeListPrototype.hasOwnProperty(key))
-				NodeListPrototype[key] = object[key];
-			
-			if(!ElementListPrototype.hasOwnProperty(key))
-				ElementListPrototype[key] = object[key];
-			
-			if(!HTMLCollectionPrototype.hasOwnProperty(key))
-				HTMLCollectionPrototype[key] = object[key];
+			prototype[key] = object[key];
 		}
 	}
 	

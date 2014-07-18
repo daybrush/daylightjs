@@ -16,11 +16,12 @@ var _curCss = function(element, name, pre_styles) {
 	//element에 대해 미리 정의한 style들의 모음.
 	name = daylight.camelCase(name);
 	
-	var style = pre_styles && pre_styles[name] || _style(element, name) || 0;
+	var style = pre_styles && pre_styles[name] || _style(element, name) || "";
 
 
 	//한 스타일 속성  style.length - 1 = 문자 끝자리가 %
-	if(style && style.length && style[style.length - 1] === "%") {
+	
+	if(style && style.match(/^(\-?[0-9\.]+)\%$/) != null) {
 		var percentage = parseFloat(style);
 	
 		//false Nan까지 고려

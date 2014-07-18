@@ -11,10 +11,6 @@ prototype.extend({
 	isEmpty: prototype.empty,
 	forEach: prototype.each
 });
-daylight.extend(true, NodeListPrototype, prototype);
-daylight.extend(true, ElementListPrototype, prototype);
-if(HTMLCollectionPrototype)
-	daylight.extend(true, HTMLCollectionPrototype, prototype);
 
 
 daylight.fn = prototype;
@@ -26,14 +22,7 @@ daylight.fn.extend =  function() {
 	for(; i < length; ++i) {
 		object = arguments[i];
 		for(var key in object) {
-			if(!NodeListPrototype.hasOwnProperty(key))
-				NodeListPrototype[key] = object[key];
-			
-			if(!ElementListPrototype.hasOwnProperty(key))
-				ElementListPrototype[key] = object[key];
-			
-			if(!HTMLCollectionPrototype.hasOwnProperty(key))
-				HTMLCollectionPrototype[key] = object[key];
+			prototype[key] = object[key];
 		}
 	}
 	

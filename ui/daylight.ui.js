@@ -137,6 +137,8 @@ daylight.ui.textedit.setText = function(dlTarget, text) {
 	var sDefaultPrefix = dlTarget.attr("data-prefix") || "";
 	var sText = sPrefix + text + sSuffix;
 	dlTarget.attr("data-text", text);
+	if(dlTarget.attr("multiple"))
+		sText = sText.replaceAll(" ", "&nbsp;").replaceAll("\n", "<br>");
 	dlTarget.html(sDefaultPrefix + sText);
 }
 daylight.ui.textedit.complete = function(dlTarget) {
@@ -175,8 +177,10 @@ daylight.ui.textedit.edit = function(target) {
 		dlTarget.attr("data-text", dlTarget.html());
 		
 	var sDefaultPrefix = dlTarget.attr("data-prefix") || "";
-	dlTarget.html(sDefaultPrefix + '<input type="text" class="day-textedit" value="'+(dlTarget.attr("data-text") || "")+'"/>');
-	//dlTarget.html('<textarea class="day-textedit'>+(dlTarget.attr("data-text") || "")+'"</textarea>');
+	if(dlTarget.attr("multiple") === null)
+		dlTarget.html(sDefaultPrefix + '<input type="text" class="day-textedit" value="'+(dlTarget.attr("data-text") || "")+'"/>');
+	else
+		dlTarget.html('<textarea class="day-textedit">'+(dlTarget.attr("data-text") || "")+'</textarea>');
 	dlTarget.find(".day-textedit").get(0).focus();
 
 }
@@ -201,11 +205,13 @@ daylight.ui.textedit.event = function() {
 		if(!daylight.hasClass(e.target, "day-textedit"))
 			return;
 
-		var key = $.Event(e).key();		
+		var key = $.Event(e).key();
+		var dlTarget = $(e.target).parent();
 		if(key.enter) {
-			daylight.ui.textedit.complete($(e.target).parent());
+			if(dlTarget.attr("multiple") === null)
+				daylight.ui.textedit.complete(dlTarget);
 		}else if(key.esc) {
-			daylight.ui.textedit.cancel($(e.target).parent());			
+			daylight.ui.textedit.cancel(dlTarget);			
 		}
 	});
 	$("body").on("textedit", function(e) {
